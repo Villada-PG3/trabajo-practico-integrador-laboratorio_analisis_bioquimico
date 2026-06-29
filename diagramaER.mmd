@@ -1,0 +1,114 @@
+erDiagram
+    PACIENTE {
+        string dni PK
+        string nombre
+        string apellido
+        string email
+        string telefono
+        string domicilio
+    }
+    RECETA {
+        int id PK
+        string dni_paciente FK
+        string matricula_medico FK
+        date fecha_emision
+        string estado
+    }
+    MEDICO {
+        string matricula PK
+        string nombre
+        string apellido
+        string especialidad
+        boolean validado_colegio
+    }
+    RECEPCIONISTA {
+        int id PK
+        string nombre
+        string apellido
+        string email
+    }
+    SOLICITUD_ANALISIS {
+        int id PK
+        string dni_paciente FK
+        int id_receta FK
+        int id_recepcionista FK
+        datetime fecha_hora
+        string estado
+    }
+    SOLICITUD_ESTUDIO {
+        int id PK
+        int id_solicitud FK
+        int id_estudio FK
+        string estado
+    }
+    ESTUDIO {
+        int id PK
+        string codigo
+        string nombre
+        string descripcion
+        string metodo_tecnica
+        string unidad_medida
+    }
+    RANGO_REFERENCIA {
+        int id PK
+        int id_estudio FK
+        float valor_min
+        float valor_max
+        string genero
+        int edad_min
+        int edad_max
+    }
+    MUESTRA {
+        int id PK
+        int id_solicitud FK
+        int id_extraccionista FK
+        string tipo
+        datetime fecha_hora_extraccion
+    }
+    EXTRACCIONISTA {
+        int id PK
+        string nombre
+        string apellido
+        string legajo
+    }
+    RESULTADO {
+        int id PK
+        int id_solicitud_estudio FK
+        int id_responsable FK
+        float valor_hallado
+        datetime fecha_registro
+    }
+    RESPONSABLE_ANALISIS {
+        int id PK
+        string nombre
+        string apellido
+        string legajo
+        string cargo
+    }
+    COMPROBANTE {
+        int id PK
+        int id_solicitud FK
+        datetime fecha_emision
+        string cap
+    }
+    ESTADO_SOLICITUD {
+        int id PK
+        string nombre
+        string descripcion
+    }
+
+    ESTUDIO ||--o{ RANGO_REFERENCIA : "tiene"
+    SOLICITUD_ESTUDIO ||--o| RESULTADO : "produce"
+    SOLICITUD_ANALISIS ||--|{ SOLICITUD_ESTUDIO : "incluye"
+    MUESTRA o{--|| EXTRACCIONISTA : "extrae"
+    MEDICO ||--o{ RECETA : "emite"
+    RECETA ||--o| SOLICITUD_ANALISIS : "origina"
+    RECEPCIONISTA ||--o{ SOLICITUD_ANALISIS : "registra"
+    SOLICITUD_ANALISIS ||--o| MUESTRA : "requiere"
+    SOLICITUD_ANALISIS ||--o| COMPROBANTE : "genera"
+    RESPONSABLE_ANALISIS ||--o{ RESULTADO : "registra"
+    ESTADO_SOLICITUD ||--o{ SOLICITUD_ANALISIS : "clasifica"
+    PACIENTE ||--o{ RECETA : "tiene"
+    PACIENTE ||--o{ SOLICITUD_ANALISIS : "genera"
+    ESTUDIO ||--o{ SOLICITUD_ESTUDIO : "forma parte"
+    
