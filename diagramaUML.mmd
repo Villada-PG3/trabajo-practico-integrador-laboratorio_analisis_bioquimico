@@ -1,0 +1,132 @@
+classDiagram
+    class Persona {
+        #str nombre
+        #str apellido
+        #str email
+        +getNombreCompleto()
+    }
+
+    class Paciente {
+        -str dni
+        -str telefono
+        -str domicilio
+        +solicitarAnalisis() 
+        +verHistorial() 
+    }
+
+    class Medico {
+        -str matricula
+        -str especialidad
+        -bool validadoColegio
+        +emitirReceta(paciente: Paciente) 
+        +validarMatricula()
+    }
+
+    class Recepcionista {
+        -int id
+        +registrarSolicitud(receta: Receta)
+        +emitirComprobante(solicitud: SolicitudAnalisis) 
+    }
+
+    class Extraccionista {
+        -int id
+        -str legajo
+        +extraerMuestra(solicitud: SolicitudAnalisis) 
+    }
+
+    class ResponsableAnalisis {
+        -int id
+        -str legajo
+        -str cargo
+        +registrarResultado(solicitudEstudio: SolicitudEstudio)
+    }
+
+    class Receta {
+        -int id
+        -date fechaEmision
+        -str estado
+        +estaVigente() 
+        +generarSolicitud() 
+    }
+
+    class SolicitudAnalisis {
+        -int id
+        -datetime fechaHora
+        -str estado
+        +agregarEstudio(estudio: Estudio) 
+        +cambiarEstado(nuevoEstado: EstadoSolicitud) 
+        +generarComprobante() 
+    }
+
+    class SolicitudEstudio {
+        -int id
+        -str estado
+        +registrarResultado(valor: float) 
+    }
+
+    class Estudio {
+        -int id
+        -str codigo
+        -str nombre
+        -str descripcion
+        -str metodoTecnica
+        -str unidadMedida
+        +obtenerRangoReferencia(genero: string, edad: int)
+    }
+
+    class RangoReferencia {
+        -int id
+        -float valorMin
+        -float valorMax
+        -str genero
+        -int edadMin
+        -int edadMax
+        +estaEnRango(valor: float, genero: string, edad: int)
+    }
+
+    class Muestra {
+        -int id
+        -str tipo
+        -datetime fechaHoraExtraccion
+    }
+
+    class Resultado {
+        -int id
+        -float valorHallado
+        -datetime fechaRegistro
+        +esNormal(rango: RangoReferencia)
+    }
+
+    class Comprobante {
+        -int id
+        -datetime fechaEmision
+        -str cap
+        +imprimir()
+    }
+
+    class EstadoSolicitud {
+        -int id
+        -str nombre
+        -str descripcion
+    }
+
+    Persona <|-- Paciente
+    Persona <|-- Medico
+    Persona <|-- Recepcionista
+    Persona <|-- Extraccionista
+    Persona <|-- ResponsableAnalisis
+
+    Paciente "1" --> "0..*" Receta : tiene
+    Medico "1" --> "0..*" Receta : emite
+    Paciente "1" --> "0..*" SolicitudAnalisis : genera
+    Receta "1" --> "0..1" SolicitudAnalisis : origina
+    Recepcionista "1" --> "0..*" SolicitudAnalisis : registra
+    EstadoSolicitud "1" --> "0..*" SolicitudAnalisis : clasifica
+    SolicitudAnalisis "1" *-- "1..*" SolicitudEstudio : incluye
+    SolicitudAnalisis "1" --> "0..1" Muestra : requiere
+    SolicitudAnalisis "1" --> "0..1" Comprobante : genera
+    Extraccionista "1" --> "0..*" Muestra : extrae
+    Estudio "1" --> "0..*" SolicitudEstudio : forma parte
+    Estudio "1" --> "0..*" RangoReferencia : tiene
+    SolicitudEstudio "1" --> "0..1" Resultado : produce
+    ResponsableAnalisis "1" --> "0..*" Resultado : registra
