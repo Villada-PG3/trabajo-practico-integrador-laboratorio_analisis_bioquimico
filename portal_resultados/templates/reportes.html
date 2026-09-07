@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Reportes estadísticos</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f4f7;
+            margin: 0;
+        }
+
+        nav {
+            background-color: #222;
+            padding: 15px;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin-right: 20px;
+        }
+
+        .contenedor {
+            width: 80%;
+            margin: 40px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+        }
+
+        .grafico {
+            width: 80%;
+            margin: auto;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <nav>
+
+        <a href="{% url 'historial' %}">
+            Historial
+        </a>
+
+        <a href="{% url 'reportes' %}">
+            Reportes
+        </a>
+
+        <a href="{% url 'logout' %}">
+            Cerrar sesión
+        </a>
+
+    </nav>
+
+
+    <div class="contenedor">
+
+        <h1>
+            Reportes estadísticos
+        </h1>
+
+        <h2>
+            Solicitudes por mes
+        </h2>
+
+        <div class="grafico">
+
+            <canvas id="graficoSolicitudes"></canvas>
+
+        </div>
+
+    </div>
+
+
+    <script>
+
+        const ctx = document
+            .getElementById("graficoSolicitudes");
+
+        new Chart(ctx, {
+
+            type: "bar",
+
+            data: {
+
+                labels: [
+                    "Enero",
+                    "Febrero",
+                    "Marzo",
+                    "Abril",
+                    "Mayo",
+                    "Junio"
+                ],
+
+                datasets: [
+
+                    {
+                        label: "Solicitudes",
+
+                        data: [
+                            {{ datos.enero }},
+                            {{ datos.febrero }},
+                            {{ datos.marzo }},
+                            {{ datos.abril }},
+                            {{ datos.mayo }},
+                            {{ datos.junio }}
+                        ]
+                    }
+
+                ]
+
+            },
+
+            options: {
+
+                responsive: true,
+
+                scales: {
+
+                    y: {
+
+                        beginAtZero: true
+
+                    }
+
+                }
+
+            }
+
+        });
+
+    </script>
+
+</body>
+
+</html>

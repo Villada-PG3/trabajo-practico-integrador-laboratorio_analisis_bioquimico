@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Portal de Resultados</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f4f7;
+            margin: 0;
+        }
+
+        .contenedor {
+            width: 400px;
+            margin: 100px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px #ccc;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+
+        .error {
+            color: red;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="contenedor">
+
+        <h1>Portal de Resultados</h1>
+
+        <p>
+            Ingrese su DNI y Clave de Acceso Personal (CAP)
+        </p>
+
+        {% if messages %}
+            {% for message in messages %}
+                <p class="error">
+                    {{ message }}
+                </p>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST">
+
+            {% csrf_token %}
+
+            <label for="dni">
+                DNI
+            </label>
+
+            <input
+                type="text"
+                id="dni"
+                name="dni"
+                placeholder="Ingrese su DNI"
+                required
+            >
+
+            <label for="cap">
+                CAP
+            </label>
+
+            <input
+                type="text"
+                id="cap"
+                name="cap"
+                placeholder="Ingrese su CAP"
+                required
+            >
+
+            <button type="submit">
+                Ingresar
+            </button>
+
+        </form>
+
+    </div>
+
+</body>
+
+</html>

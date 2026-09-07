@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Resultados</title>
+
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f4f7;
+            margin: 0;
+        }
+
+        nav {
+            background-color: #222;
+            padding: 15px;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin-right: 20px;
+        }
+
+        .contenedor {
+            width: 80%;
+            margin: 40px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #eee;
+        }
+
+        .boton {
+            display: inline-block;
+            padding: 10px 15px;
+            margin-top: 20px;
+            background-color: #333;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <nav>
+
+        <a href="{% url 'historial' %}">
+            Historial
+        </a>
+
+        <a href="{% url 'reportes' %}">
+            Reportes
+        </a>
+
+        <a href="{% url 'logout' %}">
+            Cerrar sesión
+        </a>
+
+    </nav>
+
+
+    <div class="contenedor">
+
+        <h1>
+            Resultados de la Solicitud #{{ solicitud_id }}
+        </h1>
+
+        <p>
+            Paciente:
+            <strong>{{ paciente.nombre }}</strong>
+        </p>
+
+        <p>
+            DNI:
+            <strong>{{ paciente.dni }}</strong>
+        </p>
+
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>Estudio</th>
+
+                    <th>Unidad</th>
+
+                    <th>Técnica</th>
+
+                    <th>Valor hallado</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for resultado in resultados %}
+
+                <tr>
+
+                    <td>
+                        {{ resultado.estudio }}
+                    </td>
+
+                    <td>
+                        {{ resultado.unidad }}
+                    </td>
+
+                    <td>
+                        {{ resultado.tecnica }}
+                    </td>
+
+                    <td>
+                        <strong>
+                            {{ resultado.valor }}
+                        </strong>
+                    </td>
+
+                </tr>
+
+                {% empty %}
+
+                <tr>
+
+                    <td colspan="4">
+                        No hay resultados disponibles.
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+
+        <button
+            class="boton"
+            onclick="window.print()"
+        >
+            Descargar PDF / Imprimir
+        </button>
+
+    </div>
+
+</body>
+
+</html>

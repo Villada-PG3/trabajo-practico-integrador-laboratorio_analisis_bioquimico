@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+
+    <title>Historial</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f2f4f7;
+        }
+
+        nav {
+            background-color: #222;
+            padding: 15px;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin-right: 20px;
+        }
+
+        .contenedor {
+            width: 80%;
+            margin: 40px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #eee;
+        }
+
+        .boton {
+            padding: 8px 12px;
+            background-color: #333;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+
+        <a href="{% url 'historial' %}">
+            Historial
+        </a>
+
+        <a href="{% url 'reportes' %}">
+            Reportes
+        </a>
+
+        <a href="{% url 'logout' %}">
+            Cerrar sesión
+        </a>
+
+    </nav>
+
+    <div class="contenedor">
+
+        <h1>
+            Historial de resultados
+        </h1>
+
+        <p>
+            Paciente:
+            <strong>
+                {{ paciente.nombre }}
+            </strong>
+        </p>
+
+        <p>
+            DNI:
+            <strong>
+                {{ paciente.dni }}
+            </strong>
+        </p>
+
+        <table>
+
+            <thead>
+
+                <tr>
+                    <th>Solicitud</th>
+                    <th>Fecha</th>
+                    <th>Estado</th>
+                    <th>Acción</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for solicitud in solicitudes %}
+
+                <tr>
+
+                    <td>
+                        #{{ solicitud.id }}
+                    </td>
+
+                    <td>
+                        {{ solicitud.fecha }}
+                    </td>
+
+                    <td>
+                        {{ solicitud.estado }}
+                    </td>
+
+                    <td>
+
+                        <a
+                            class="boton"
+                            href="{% url 'resultados' solicitud.id %}"
+                        >
+                            Ver resultados
+                        </a>
+
+                    </td>
+
+                </tr>
+
+                {% empty %}
+
+                <tr>
+                    <td colspan="4">
+                        No existen solicitudes.
+                    </td>
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</body>
+
+</html>
