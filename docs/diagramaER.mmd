@@ -1,23 +1,20 @@
 erDiagram
     PACIENTE {
-        string dni PK
+        int id PK
         string nombre
         string apellido
         string email
+        string dni
         string telefono
         string domicilio
-    }
-    RECETA {
-        int id PK
-        string dni_paciente FK
-        string matricula_medico FK
-        date fecha_emision
-        string estado
+        string cap
     }
     MEDICO {
-        string matricula PK
+        int id PK
         string nombre
         string apellido
+        string email
+        string matricula
         string especialidad
         boolean validado_colegio
     }
@@ -27,19 +24,25 @@ erDiagram
         string apellido
         string email
     }
-    SOLICITUD_ANALISIS {
+    EXTRACCIONISTA {
         int id PK
-        string dni_paciente FK
-        int id_receta FK
-        int id_recepcionista FK
-        datetime fecha_hora
-        string estado
+        string nombre
+        string apellido
+        string email
+        string legajo
     }
-    SOLICITUD_ESTUDIO {
+    RESPONSABLE_ANALISIS {
         int id PK
-        int id_solicitud FK
-        int id_estudio FK
-        string estado
+        string nombre
+        string apellido
+        string email
+        string legajo
+        string cargo
+    }
+    ESTADO_SOLICITUD {
+        int id PK
+        string nombre
+        string descripcion
     }
     ESTUDIO {
         int id PK
@@ -58,18 +61,33 @@ erDiagram
         int edad_min
         int edad_max
     }
+    RECETA {
+        int id PK
+        int id_medico FK
+        int id_paciente FK
+        date fecha_emision
+        string archivo_pdf
+    }
+    SOLICITUD_ANALISIS {
+        int id PK
+        int id_paciente FK
+        int id_receta FK
+        int id_recepcionista FK
+        int id_estado FK
+        datetime fecha_hora
+    }
+    SOLICITUD_ESTUDIO {
+        int id PK
+        int id_solicitud FK
+        int id_estudio FK
+        string estado
+    }
     MUESTRA {
         int id PK
         int id_solicitud FK
         int id_extraccionista FK
         string tipo
         datetime fecha_hora_extraccion
-    }
-    EXTRACCIONISTA {
-        int id PK
-        string nombre
-        string apellido
-        string legajo
     }
     RESULTADO {
         int id PK
@@ -78,37 +96,35 @@ erDiagram
         float valor_hallado
         datetime fecha_registro
     }
-    RESPONSABLE_ANALISIS {
-        int id PK
-        string nombre
-        string apellido
-        string legajo
-        string cargo
-    }
     COMPROBANTE {
         int id PK
         int id_solicitud FK
+        int id_muestra FK
         datetime fecha_emision
         string cap
+        int numero_paciente
     }
-    ESTADO_SOLICITUD {
+    NOTIFICACION {
         int id PK
-        string nombre
-        string descripcion
+        int id_solicitud FK
+        string tipo
+        string estado
+        datetime fecha_envio
     }
 
-    ESTUDIO ||--o{ RANGO_REFERENCIA : "tiene"
-    SOLICITUD_ESTUDIO ||--o| RESULTADO : "produce"
-    SOLICITUD_ANALISIS ||--|{ SOLICITUD_ESTUDIO : "incluye"
-    MUESTRA o{--|| EXTRACCIONISTA : "extrae"
-    MEDICO ||--o{ RECETA : "emite"
-    RECETA ||--o| SOLICITUD_ANALISIS : "origina"
-    RECEPCIONISTA ||--o{ SOLICITUD_ANALISIS : "registra"
-    SOLICITUD_ANALISIS ||--o| MUESTRA : "requiere"
-    SOLICITUD_ANALISIS ||--o| COMPROBANTE : "genera"
-    RESPONSABLE_ANALISIS ||--o{ RESULTADO : "registra"
-    ESTADO_SOLICITUD ||--o{ SOLICITUD_ANALISIS : "clasifica"
     PACIENTE ||--o{ RECETA : "tiene"
+    MEDICO ||--o{ RECETA : "emite"
+    RECETA ||--o{ SOLICITUD_ANALISIS : "origina"
     PACIENTE ||--o{ SOLICITUD_ANALISIS : "genera"
+    RECEPCIONISTA ||--o{ SOLICITUD_ANALISIS : "registra"
+    ESTADO_SOLICITUD ||--o{ SOLICITUD_ANALISIS : "clasifica"
+    SOLICITUD_ANALISIS ||--o{ SOLICITUD_ESTUDIO : "incluye"
     ESTUDIO ||--o{ SOLICITUD_ESTUDIO : "forma parte"
-    
+    ESTUDIO ||--o{ RANGO_REFERENCIA : "posee"
+    SOLICITUD_ANALISIS ||--o{ MUESTRA : "requiere"
+    EXTRACCIONISTA ||--o{ MUESTRA : "extrae"
+    SOLICITUD_ESTUDIO ||--o{ RESULTADO : "produce"
+    RESPONSABLE_ANALISIS ||--o{ RESULTADO : "registra"
+    SOLICITUD_ANALISIS ||--o{ COMPROBANTE : "genera"
+    MUESTRA ||--o{ COMPROBANTE : "referencia"
+    SOLICITUD_ANALISIS ||--o{ NOTIFICACION : "dispara"
