@@ -15,21 +15,33 @@
 </head>
 <body class="d-flex flex-column min-vh-100">
 
-    <!-- Header / Navbar Principal -->
-    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom shadow-sm">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="#">Laboratorio AC</a>
-            <span class="navbar-text text-white-50 d-none d-md-inline">
-                Sistema SAC - Córdoba[cite: 1, 2]
-            </span>
-            <div class="ms-auto">
-                {% if request.session.paciente_id %}
-                    <span class="text-white me-3">Paciente: <strong>{{ request.session.paciente_nombre }}</strong></span>
-                    <a href="{% url 'logout_paciente' %}" class="btn btn-outline-light btn-sm">Cerrar Sesión</a>
-                {% endif %}
-            </div>
+    
+ <!-- Header / Navbar Principal -->
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom shadow-sm">
+    <div class="container">
+        <!-- El clic en el logo o nombre te devuelve siempre al Home público -->
+        <a class="navbar-brand fw-bold" href="{% url 'analisis_bioquimico:home' %}">Laboratorio AC</a>
+        <span class="navbar-text text-white-50 d-none d-md-inline">
+            Sistema SAC - Córdoba
+        </span>
+        <div class="ms-auto d-flex align-items-center gap-2">
+            {% if request.session.paciente_dni %}
+                <!-- Si el paciente INICIÓ sesión con DNI + CAP -->
+                <a href="{% url 'analisis_bioquimico:portal_historial' %}" class="btn btn-light btn-sm text-primary fw-bold">
+                    Mis Estudios
+                </a>
+                <a href="{% url 'analisis_bioquimico:logout_paciente' %}" class="btn btn-outline-light btn-sm">
+                    Cerrar Sesión
+                </a>
+            {% else %}
+                <!-- Si es un visitante en el Home que aún NO inició sesión -->
+                <a href="{% url 'analisis_bioquimico:login_paciente' %}" class="btn btn-light btn-sm text-primary fw-semibold">
+                    Acceso Pacientes
+                </a>
+            {% endif %}
         </div>
-    </nav>
+    </div>
+</nav>
 
     <!-- Contenedor de Mensajes de Django -->
     <div class="container mt-3">
@@ -52,7 +64,7 @@
     <!-- Footer -->
     <footer class="footer-custom text-center py-3 mt-auto border-top">
         <div class="container">
-            <p class="m-0">Laboratorio AC - Av. Sagrada Familia 580, Córdoba[cite: 1, 2]</p>
+            <p class="m-0">Laboratorio AC - Av. Sagrada Familia 580, Córdoba</p>
         </div>
     </footer>
 

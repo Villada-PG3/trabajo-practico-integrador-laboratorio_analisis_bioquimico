@@ -1,6 +1,3 @@
-from django.shortcuts import render
-
-# Create your views here.
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from .models import Paciente, SolicitudAnalisis, SolicitudEstudio, Resultado, RangoReferencia, Comprobante
@@ -36,7 +33,9 @@ def login_paciente(request):
             # Guardamos los datos clave en la sesión del usuario
             request.session['paciente_id'] = paciente.id
             request.session['paciente_nombre'] = f"{paciente.nombre} {paciente.apellido}"
-            return redirect('portal_historial')
+            
+            # CORRECCIÓN: Agregar el namespace 'analisis_bioquimico:'
+            return redirect('analisis_bioquimico:portal_historial')
         else:
             messages.error(request, 'La Clave de Acceso Personal (CAP) ingresada no es válida para este DNI.')
 
@@ -45,10 +44,11 @@ def login_paciente(request):
 
 def logout_paciente(request):
     """
-    Cierra la sesión activa del paciente.
+    Cierra la sesión activa del paciente y lo devuelve al login.
     """
     request.session.flush()
-    return redirect('login_paciente')
+    # CORRECCIÓN: Agregar el namespace 'analisis_bioquimico:'
+    return redirect('analisis_bioquimico:login_paciente')
 
 
 def historial_solicitudes(request):
@@ -58,7 +58,8 @@ def historial_solicitudes(request):
     paciente_id = request.session.get('paciente_id')
     if not paciente_id:
         messages.warning(request, 'Debe ingresar con su DNI y CAP para consultar sus resultados.')
-        return redirect('login_paciente')
+        # CORRECCIÓN: Agregar el namespace 'analisis_bioquimico:'
+        return redirect('analisis_bioquimico:login_paciente')
 
     paciente = get_object_or_404(Paciente, id=paciente_id)
     
@@ -96,3 +97,14 @@ def historial_solicitudes(request):
         'resultados_detalle': resultados_detalle,
     }
     return render(request, 'analisis_bioquimico/portal/historial.html', context)
+
+
+# ==========================================
+# SECCIÓN: INSTITUCIONAL / LANDING PAGE
+# ==========================================
+
+def home(request):
+    """
+    Landing Page pública inspirada en Laboratorio LACE.
+    """
+    return render(request, 'analisis_bioquimico/home.html')
