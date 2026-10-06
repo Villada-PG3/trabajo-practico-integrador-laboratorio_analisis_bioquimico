@@ -104,7 +104,41 @@ def historial_solicitudes(request):
 # ==========================================
 
 def home(request):
-    """
-    Landing Page pública inspirada en Laboratorio LACE.
-    """
     return render(request, 'analisis_bioquimico/home.html')
+
+
+def login_unificado(request):
+    """
+    Vista de login centralizada con pestañas para Pacientes y Recepción.
+    """
+    if request.method == 'POST':
+        tipo_login = request.POST.get('tipo_login')
+
+        # 1. LOGIN DE PACIENTE (DNI + CAP)
+        if tipo_login == 'paciente':
+            dni = request.POST.get('dni', '').strip()
+            cap = request.POST.get('cap', '').strip()
+
+            paciente = Paciente.objects.filter(dni=dni, cap=cap).first()
+            if paciente:
+                request.session['paciente_id'] = paciente.id
+                request.session['paciente_nombre'] = f"{paciente.nombre} {paciente.apellido}"
+                messages.success(request, f"¡Bienvenido/a, {paciente.nombre}!")
+                return redirect('analisis_bioquimico:portal_historial')
+            else:
+                messages.error(request, 'DNI o CAP incorrectos. Verifique los datos ingresados.')
+
+        # 2. LOGIN DE RECEPCIÓN / PERSONAL
+        elif tipo_login == 'recepcion':
+            usuario = request.POST.get('usuario', '').strip()
+            clave = request.POST.get('clave', '').strip()
+
+            # Validación simple/demo (o usando el sistema de usuarios de Django)
+            if usuario == 'recepcion' and clave == '1234':
+                request.session['recepcionista_id'] = 1
+                messages.success(request, 'Sesión de Recepción iniciada correctamente.')
+                return redirect('analisis_bioquimico:gestion_pacientes')
+            else:
+                messages.error(request, 'Usuario o contraseña de Recepción inválidos.')
+
+    return render(request, 'analisis_bioquimico/login.html')

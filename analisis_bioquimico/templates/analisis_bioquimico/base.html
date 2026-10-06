@@ -3,51 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Laboratorio AC - Sistema SAC{% endblock %}</title>
-    <!-- Bootstrap CSS -->
+    <title>{% block title %}Laboratorio SAC - Córdoba{% endblock %}</title>
+    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
-        body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .navbar-custom { background-color: #1a4d6e; }
-        .footer-custom { background-color: #e9ecef; color: #6c757d; font-size: 0.9rem; }
+        .navbar-custom {
+            background-color: #1a4d6e;
+        }
+        body {
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        main {
+            flex: 1;
+        }
     </style>
-    {% block extra_css %}{% endblock %}
 </head>
-<body class="d-flex flex-column min-vh-100">
+<body>
 
-    
- <!-- Header / Navbar Principal -->
-<nav class="navbar navbar-expand-lg navbar-dark navbar-custom shadow-sm">
-    <div class="container">
-        <!-- El clic en el logo o nombre te devuelve siempre al Home público -->
-        <a class="navbar-brand fw-bold" href="{% url 'analisis_bioquimico:home' %}">Laboratorio AC</a>
-        <span class="navbar-text text-white-50 d-none d-md-inline">
-            Sistema SAC - Córdoba
-        </span>
-        <div class="ms-auto d-flex align-items-center gap-2">
-            {% if request.session.paciente_dni %}
-                <!-- Si el paciente INICIÓ sesión con DNI + CAP -->
-                <a href="{% url 'analisis_bioquimico:portal_historial' %}" class="btn btn-light btn-sm text-primary fw-bold">
-                    Mis Estudios
-                </a>
-                <a href="{% url 'analisis_bioquimico:logout_paciente' %}" class="btn btn-outline-light btn-sm">
-                    Cerrar Sesión
-                </a>
-            {% else %}
-                <!-- Si es un visitante en el Home que aún NO inició sesión -->
-                <a href="{% url 'analisis_bioquimico:login_paciente' %}" class="btn btn-light btn-sm text-primary fw-semibold">
-                    Acceso Pacientes
-                </a>
-            {% endif %}
+    <!-- Header / Navbar Principal -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom shadow-sm">
+        <div class="container">
+            <!-- Logo principal -> Te lleva al Home público -->
+            <a class="navbar-brand fw-bold" href="{% url 'analisis_bioquimico:home' %}">
+                <i class="bi bi-journal-medical me-1"></i> Laboratorio SAC
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSAC" aria-controls="navbarSAC" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarSAC">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link text-white-50" href="{% url 'analisis_bioquimico:home' %}">Inicio</a>
+                    </li>
+                    
+                    <!-- Acceso al panel de gestión solo si no estamos en el Home y la sesión de Recepción está activa -->
+                    {% if request.session.recepcionista_id and request.resolver_match.url_name != 'home' %}
+                        <li class="nav-item">
+                            <a class="nav-link fw-semibold text-white" href="{% url 'analisis_bioquimico:gestion_pacientes' %}">
+                                <i class="bi bi-person-vcard me-1"></i> Gestión de Pacientes
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+
+                <!-- Bloque de Estado de Sesión / Acceso en el Navbar -->
+                <div class="d-flex align-items-center gap-2">
+
+                    {# 1. SI ESTAMOS EN EL HOME: Siempre mostramos la vista institucional con el botón genérico 'Ingresar' #}
+                    {% if request.resolver_match.url_name == 'home' %}
+                        
+                        <a href="{% url 'analisis_bioquimico:login' %}" class="btn btn-light btn-sm text-primary fw-bold">
+                            <i class="bi bi-box-arrow-in-right me-1"></i> Ingresar
+                        </a>
+
+                    {# 2. SI NO ESTAMOS EN EL HOME: Mostramos la sesión activa según el perfil #}
+                    {% else %}
+
+                        {% if request.session.paciente_id %}
+                            <span class="text-white small me-1">
+                                <i class="bi bi-person-circle me-1"></i>{{ request.session.paciente_nombre }}
+                            </span>
+                            <a href="{% url 'analisis_bioquimico:portal_historial' %}" class="btn btn-light btn-sm text-primary fw-bold">
+                                Mis Estudios
+                            </a>
+                            <a href="{% url 'analisis_bioquimico:logout_paciente' %}" class="btn btn-outline-light btn-sm">
+                                Cerrar Sesión
+                            </a>
+
+                        {% elif request.session.recepcionista_id %}
+                            <span class="text-white small me-1">
+                                <i class="bi bi-person-badge me-1"></i>Recepción
+                            </span>
+                            <a href="{% url 'analisis_bioquimico:gestion_pacientes' %}" class="btn btn-light btn-sm text-primary fw-bold">
+                                Panel Recepción
+                            </a>
+                            <a href="{% url 'analisis_bioquimico:logout_recepcion' %}" class="btn btn-outline-light btn-sm">
+                                Cerrar Sesión
+                            </a>
+
+                        {% else %}
+                            <a href="{% url 'analisis_bioquimico:login' %}" class="btn btn-light btn-sm text-primary fw-bold">
+                                <i class="bi bi-box-arrow-in-right me-1"></i> Ingresar
+                            </a>
+                        {% endif %}
+
+                    {% endif %}
+
+                </div>
+            </div>
         </div>
-    </div>
-</nav>
+    </nav>
 
-    <!-- Contenedor de Mensajes de Django -->
+    <!-- Bloque para Mensajes de Alerta/Notificación -->
     <div class="container mt-3">
         {% if messages %}
             {% for message in messages %}
-                <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+                <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-sm" role="alert">
                     {{ message }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
@@ -55,21 +114,21 @@
         {% endif %}
     </div>
 
-    <!-- Bloque de Contenido Principal -->
-    <main class="container my-4 flex-grow-1">
+    <!-- Contenido Dinámico -->
+    <main>
         {% block content %}
         {% endblock %}
     </main>
 
-    <!-- Footer -->
-    <footer class="footer-custom text-center py-3 mt-auto border-top">
-        <div class="container">
-            <p class="m-0">Laboratorio AC - Av. Sagrada Familia 580, Córdoba</p>
+    <!-- Footer Institucional -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container text-center">
+            <p class="mb-1 fw-semibold">Laboratorio de Análisis Bioquímicos SAC</p>
+            <small class="text-muted">Av. Sagrada Familia 580, Córdoba &copy; {% now "Y" %}</small>
         </div>
     </footer>
 
-    <!-- Bootstrap JS -->
+    <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    {% block extra_js %}{% endblock %}
 </body>
 </html>

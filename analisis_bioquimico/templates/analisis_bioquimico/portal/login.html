@@ -1,31 +1,72 @@
 {% extends 'analisis_bioquimico/base.html' %}
 
-{% block title %}Acceso a Resultados - Laboratorio AC{% endblock %}
-
 {% block content %}
-<div class="row justify-content-center my-5">
-    <div class="col-md-5 col-lg-4">
-        <div class="card shadow-sm border-0 rounded-3">
-            <div class="card-header text-center py-3 text-white" style="background-color: #1a4d6e;">
-                <h5 class="m-0 fw-bold">Consulta de Resultados</h5>
-                <small class="text-white-50">Ingrese sus datos impresos en el comprobante[cite: 2]</small>
-            </div>
-            <div class="card-body p-4">
-                <form method="POST">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label for="dni" class="form-label fw-bold">Número de DNI</label>
-                        <input type="text" class="form-control" id="dni" name="dni" placeholder="Ej: 26448123" required autocomplete="off">
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card border-0 shadow-lg rounded-3">
+                <div class="card-header bg-primary text-white text-center py-3">
+                    <h4 class="fw-bold mb-0"><i class="bi bi-shield-lock-fill me-2"></i>Acceso al Sistema</h4>
+                </div>
+                <div class="card-body p-4">
+
+                    <!-- Navegación por Pestañas (Tabs) -->
+                    <ul class="nav nav-pills nav-justified mb-4" id="loginTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active fw-bold" id="paciente-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#paciente-panel" type="button" role="tab">
+                                <i class="bi bi-person-fill me-1"></i> Paciente
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link fw-bold" id="recepcion-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#recepcion-panel" type="button" role="tab">
+                                <i class="bi bi-person-badge-fill me-1"></i> Recepción
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="loginTabContent">
+                        <!-- Pestaña 1: Pacientes -->
+                        <div class="tab-pane fade show active" id="paciente-panel" role="tabpanel">
+                            <form method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="tipo_login" value="paciente">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Número de DNI</label>
+                                    <input type="text" name="dni" class="form-control" placeholder="Ej: 35123456" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Clave CAP</label>
+                                    <input type="password" name="cap" class="form-control" placeholder="Ingrese su clave CAP" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100 fw-bold py-2 mt-2">
+                                    <i class="bi bi-box-arrow-in-right me-1"></i> Consultar Mis Resultados
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Pestaña 2: Recepción -->
+                        <div class="tab-pane fade" id="recepcion-panel" role="tabpanel">
+                            <form method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="tipo_login" value="recepcion">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Usuario de Recepción</label>
+                                    <input type="text" name="usuario" class="form-control" placeholder="Ej: recepcion" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Contraseña</label>
+                                    <input type="password" name="clave" class="form-control" placeholder="••••••••" required>
+                                </div>
+                                <button type="submit" class="btn btn-dark w-100 fw-bold py-2 mt-2">
+                                    <i class="bi bi-shield-check me-1"></i> Ingresar al Panel
+                                </button>
+                            </form>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="cap" class="form-label fw-bold">Clave de Acceso Personal (CAP)</label>
-                        <input type="password" class="form-control" id="cap" name="cap" placeholder="Ej: n3dBum4" required autocomplete="off">
-                        <div class="form-text mt-1">La CAP es la clave secreta impresa en su comprobante[cite: 2].</div>
-                    </div>
-                    <button type="submit" class="btn w-100 py-2 text-white fw-bold mt-2" style="background-color: #1a4d6e;">
-                        Ingresar al Portal
-                    </button>
-                </form>
+
+                </div>
             </div>
         </div>
     </div>
