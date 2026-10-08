@@ -1,0 +1,74 @@
+{% extends 'analisis_bioquimico/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Recepción de Receta y Carga de Solicitud</h2>
+    <hr>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <!-- IMPORTANTE: enctype="multipart/form-data" es obligatorio para subir la foto/PDF -->
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">{{ form.paciente.label }}</label>
+                    {{ form.paciente }}
+                    {% if form.paciente.errors %}
+                        <div class="text-danger small">{{ form.paciente.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">{{ form.medico.label }}</label>
+                    {{ form.medico }}
+                    {% if form.medico.errors %}
+                        <div class="text-danger small">{{ form.medico.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">{{ form.fecha_emision.label }}</label>
+                    {{ form.fecha_emision }}
+                    {% if form.fecha_emision.errors %}
+                        <div class="text-danger fw-bold mt-1">
+                            {% for error in form.fecha_emision.errors %}
+                                ⚠️ {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">{{ form.archivo_pdf.label }}</label>
+                    {{ form.archivo_pdf }}
+                    {% if form.archivo_pdf.errors %}
+                        <div class="text-danger small">{{ form.archivo_pdf.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">{{ form.estudios.label }}</label>
+                    <div class="border rounded p-3 bg-light">
+                        {{ form.estudios }}
+                    </div>
+                    {% if form.estudios.errors %}
+                        <div class="text-danger small">{{ form.estudios.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="btn btn-primary">Registrar Receta y Solicitud</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
