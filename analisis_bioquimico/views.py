@@ -129,13 +129,41 @@ def login_unificado(request):
             clave = request.POST.get('clave', '').strip()
 
             if usuario == 'recepcion' and clave == '1234':
+                request.session.cycle_key()
                 request.session['recepcionista_id'] = 1
                 messages.success(request, 'Sesión de Recepción iniciada correctamente.')
-                return redirect('analisis_bioquimico:recepcion_crear_solicitud')
+                return redirect('analisis_bioquimico:gestion_pacientes')
             else:
                 messages.error(request, 'Usuario o contraseña de Recepción inválidos.')
 
-    return render(request, 'analisis_bioquimico/login.html')
+    return render(request, 'analisis_bioquimico/portal/login.html')
+
+def gestion_pacientes(request):
+    """
+    Panel principal de recepción.
+    Requiere una sesión de recepcionista activa.
+    """
+    if not request.session.get('recepcionista_id'):
+        messages.warning(request, 'Debe iniciar sesión como recepcionista.')
+        return redirect('analisis_bioquimico:login')
+
+    return render(
+        request,
+        'analisis_bioquimico/recepcion/gestion_paciente.html'
+    )
+
+def logout_recepcion(request):
+    """
+    Cierra únicamente el acceso de recepción.
+    """
+    request.session.pop('recepcionista_id', None)
+
+    messages.success(
+        request,
+        'Sesión de recepción cerrada correctamente.'
+    )
+
+    return redirect('analisis_bioquimico:login')
 
 
 # ==========================================

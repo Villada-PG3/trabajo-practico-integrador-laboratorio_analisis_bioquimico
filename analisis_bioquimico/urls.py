@@ -10,9 +10,11 @@ urlpatterns = [
     path('recepcion/solicitud/nueva/', views.recepcion_crear_solicitud, name='recepcion_crear_solicitud'),
     
     # Rutas del Módulo 3 (Portal del Paciente)
-    path('portal/login/', views.login_paciente, name='login_paciente'),
+    path('portal/login/', views.login_unificado, name='login_paciente'),
     path('portal/logout/', views.logout_paciente, name='logout_paciente'),
     path('portal/historial/', views.historial_solicitudes, name='portal_historial'),
-    path('recepcion/pacientes/', views.login_paciente, name='login'),
+    path('login/', views.login_unificado, name='login'),
+    path('recepcion/pacientes/', views.gestion_pacientes, name='gestion_pacientes'),
+    path('recepcion/logout/', views.logout_recepcion, name='logout_recepcion'),
 ]
 
