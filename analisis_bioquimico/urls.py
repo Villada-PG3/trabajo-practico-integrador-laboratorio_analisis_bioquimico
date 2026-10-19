@@ -15,3 +15,4 @@ urlpatterns = [
     path('portal/historial/', views.historial_solicitudes, name='portal_historial'),
     path('recepcion/pacientes/', views.login_paciente, name='login'),
 ]
+

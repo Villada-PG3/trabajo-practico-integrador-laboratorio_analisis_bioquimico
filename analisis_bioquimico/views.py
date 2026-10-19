@@ -5,7 +5,7 @@ from django.core.mail import send_mail
 from .models import (
     Paciente, Medico, Recepcionista, EstadoSolicitud, 
     Receta, SolicitudAnalisis, SolicitudEstudio, Resultado, 
-    RangoReferencia, Comprobante
+    RangoReferencia, Comprobante, Muestra, Extraccionista
 )
 from .forms import CrearSolicitudForm
 
@@ -224,3 +224,68 @@ def recepcion_crear_solicitud(request):
         form = CrearSolicitudForm(initial=initial_data)
 
     return render(request, 'analisis_bioquimico/recepcion/crear_solicitud.html', {'form': form})
+
+
+def sala_extraccion(request):
+    """
+    Muestra la lista de solicitudes de análisis pendientes de extracción de muestra.
+    """
+    # Filtramos las solicitudes cuyo estado sea 'Pendiente' (o el ID correspondiente al estado inicial)
+    solicitudes_pendientes = SolicitudAnalisis.objects.filter(
+        estado__nombre__iexact='Pendiente'
+    ).select_related('paciente', 'estado', 'recepcionista').order_by('fecha_hora')
+
+    return render(request, 'analisis_bioquimico/laboratorio/sala_extraccion.html', {
+        'solicitudes': solicitudes_pendientes
+    })
+
+
+def registrar_extraccion(request, solicitud_id):
+    """
+    Registra la toma de muestra, genera el comprobante con el CAP y actualiza el estado.
+    """
+    solicitud = get_object_or_404(SolicitudAnalisis, id=solicitud_id)
+    extraccionistas = Extraccionista.objects.all()
+
+    if request.method == 'POST':
+        extraccionista_id = request.POST.get('extraccionista_id')
+        tipo_muestra = request.POST.get('tipo_muestra', 'Sangre')
+
+        if not extraccionista_id:
+            messages.error(request, "Debe seleccionar el extraccionista a cargo.")
+            return redirect('analisis_bioquimico:registrar_extraccion', solicitud_id=solicitud.id)
+
+        extraccionista = get_object_or_404(Extraccionista, id=extraccionista_id)
+
+        # 1. Crear la muestra tomada
+        muestra = Muestra.objects.create(
+            solicitud=solicitud,
+            extraccionista=extraccionista,
+            tipo=tipo_muestra
+        )
+
+        # 2. Generar el comprobante (se autogenera el CAP por el método save del modelo Comprobante)
+        comprobante = Comprobante.objects.create(
+            solicitud=solicitud,
+            muestra=muestra,
+            numero_paciente=solicitud.paciente.id
+        )
+
+        # 3. Cambiar el estado de la solicitud a 'En Proceso' (Ajustar según tus registros en EstadoSolicitud)
+        # Si tienes el registro en BD, puedes buscarlo o asignarlo directamente:
+        # estado_proceso = EstadoSolicitud.objects.get(nombre='En Proceso')
+        # solicitud.estado = estado_proceso
+        # solicitud.save()
+
+        messages.success(
+            request, 
+            f"Extracción registrada exitosamente. "
+            f"Muestra #{muestra.id} asignada. CAP generado: {comprobante.cap}"
+        )
+        return redirect('analisis_bioquimico:sala_extraccion')
+
+    return render(request, 'analisis_bioquimico/laboratorio/registrar_extraccion.html', {
+        'solicitud': solicitud,
+        'extraccionistas': extraccionistas
+    })
+
