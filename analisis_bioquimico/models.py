@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 
 
@@ -97,7 +98,6 @@ class Receta(models.Model):
         return f"Receta #{self.id} - Paciente: {self.paciente.apellido}"
 
 
-
 class SolicitudAnalisis(models.Model):
     paciente = models.ForeignKey(Paciente, on_delete=models.CASCADE)
     receta = models.ForeignKey(Receta, on_delete=models.SET_NULL, null=True, blank=True)
@@ -142,11 +142,16 @@ class Comprobante(models.Model):
     solicitud = models.ForeignKey(SolicitudAnalisis, on_delete=models.CASCADE)
     muestra = models.ForeignKey(Muestra, on_delete=models.CASCADE)
     fecha_emision = models.DateTimeField(auto_now_add=True)
-    cap = models.CharField(max_length=50, blank=True, null=True)
+    cap = models.CharField(max_length=50, unique=True, editable=False)
     numero_paciente = models.IntegerField()
 
+    def save(self, *args, **kwargs):
+        if not self.cap:
+            self.cap = f"SAC-{uuid.uuid4().hex[:5].upper()}"
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return f"Comprobante #{self.id} - Solicitud #{self.solicitud.id}"
+        return f"Comprobante #{self.id} - Solicitud #{self.solicitud.id} (CAP: {self.cap})"
 
 
 class Notificacion(models.Model):

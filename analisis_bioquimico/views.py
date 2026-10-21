@@ -3,9 +3,9 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.core.mail import send_mail
 from .models import (
-    Paciente, Medico, Recepcionista, EstadoSolicitud,
-    Estudio, Receta, SolicitudAnalisis, SolicitudEstudio,
-    Resultado, RangoReferencia, Comprobante
+    Paciente, Medico, Recepcionista, EstadoSolicitud, 
+    Receta, SolicitudAnalisis, SolicitudEstudio, Resultado, 
+    RangoReferencia, Comprobante, Muestra, Extraccionista
 )
 from .forms import CrearSolicitudForm, EstudioForm, RangoReferenciaForm
 
@@ -224,150 +224,67 @@ def recepcion_crear_solicitud(request):
 
     return render(request, 'analisis_bioquimico/recepcion/crear_solicitud.html', {'form': form})
 
-# ==========================================
-# SECCIÓN: MÓDULO 2 - GESTIÓN DE ESTUDIOS
-# ==========================================
 
-def estudios_lista(request):
-    estudios = Estudio.objects.all().order_by('codigo')
+def sala_extraccion(request):
+    """
+    Muestra la lista de solicitudes de análisis pendientes de extracción de muestra.
+    """
+    # Filtramos las solicitudes cuyo estado sea 'Pendiente' (o el ID correspondiente al estado inicial)
+    solicitudes_pendientes = SolicitudAnalisis.objects.filter(
+        estado__nombre__iexact='Pendiente'
+    ).select_related('paciente', 'estado', 'recepcionista').order_by('fecha_hora')
 
-    return render(
-        request,
-        'analisis_bioquimico/laboratorio/estudios/lista.html',
-        {'estudios': estudios}
-    )
-
-
-def estudio_crear(request):
-    if request.method == 'POST':
-        form = EstudioForm(request.POST)
-
-        if form.is_valid():
-            estudio = form.save()
-
-            messages.success(
-                request,
-                f'El estudio "{estudio.nombre}" fue creado correctamente.'
-            )
-
-            return redirect('analisis_bioquimico:estudios_lista')
-
-    else:
-        form = EstudioForm()
-
-    return render(
-        request,
-        'analisis_bioquimico/laboratorio/estudios/formulario.html',
-        {
-            'form': form,
-            'titulo': 'Nuevo estudio',
-        }
-    )
+    return render(request, 'analisis_bioquimico/laboratorio/sala_extraccion.html', {
+        'solicitudes': solicitudes_pendientes
+    })
 
 
-def estudio_editar(request, estudio_id):
-    estudio = get_object_or_404(Estudio, id=estudio_id)
+def registrar_extraccion(request, solicitud_id):
+    """
+    Registra la toma de muestra, genera el comprobante con el CAP y actualiza el estado.
+    """
+    solicitud = get_object_or_404(SolicitudAnalisis, id=solicitud_id)
+    extraccionistas = Extraccionista.objects.all()
 
     if request.method == 'POST':
-        form = EstudioForm(request.POST, instance=estudio)
+        extraccionista_id = request.POST.get('extraccionista_id')
+        tipo_muestra = request.POST.get('tipo_muestra', 'Sangre')
 
-        if form.is_valid():
-            form.save()
+        if not extraccionista_id:
+            messages.error(request, "Debe seleccionar el extraccionista a cargo.")
+            return redirect('analisis_bioquimico:registrar_extraccion', solicitud_id=solicitud.id)
 
-            messages.success(
-                request,
-                f'El estudio "{estudio.nombre}" fue actualizado correctamente.'
-            )
+        extraccionista = get_object_or_404(Extraccionista, id=extraccionista_id)
 
-            return redirect('analisis_bioquimico:estudios_lista')
-
-    else:
-        form = EstudioForm(instance=estudio)
-
-    return render(
-        request,
-        'analisis_bioquimico/laboratorio/estudios/formulario.html',
-        {
-            'form': form,
-            'titulo': 'Editar estudio',
-            'estudio': estudio,
-        }
-    )
-
-
-def estudio_eliminar(request, estudio_id):
-    estudio = get_object_or_404(Estudio, id=estudio_id)
-
-    if request.method == 'POST':
-        nombre = estudio.nombre
-        estudio.delete()
-
-        messages.success(
-            request,
-            f'El estudio "{nombre}" fue eliminado correctamente.'
+        # 1. Crear la muestra tomada
+        muestra = Muestra.objects.create(
+            solicitud=solicitud,
+            extraccionista=extraccionista,
+            tipo=tipo_muestra
         )
 
-        return redirect('analisis_bioquimico:estudios_lista')
-
-    return render(
-        request,
-        'analisis_bioquimico/laboratorio/estudios/eliminar.html',
-        {'estudio': estudio}
-    )
-
-
-def estudio_rangos(request, estudio_id):
-    estudio = get_object_or_404(Estudio, id=estudio_id)
-
-    rangos = RangoReferencia.objects.filter(
-        estudio=estudio
-    ).order_by('edad_min')
-
-    if request.method == 'POST':
-        form = RangoReferenciaForm(request.POST)
-
-        if form.is_valid():
-            rango = form.save(commit=False)
-            rango.estudio = estudio
-            rango.save()
-
-            messages.success(
-                request,
-                'El rango de referencia fue agregado correctamente.'
-            )
-
-            return redirect(
-                'analisis_bioquimico:estudio_rangos',
-                estudio_id=estudio.id
-            )
-
-    else:
-        form = RangoReferenciaForm()
-
-    return render(
-        request,
-        'analisis_bioquimico/laboratorio/estudios/rangos.html',
-        {
-            'estudio': estudio,
-            'rangos': rangos,
-            'form': form,
-        }
-    )
-
-
-def rango_eliminar(request, rango_id):
-    rango = get_object_or_404(RangoReferencia, id=rango_id)
-    estudio_id = rango.estudio.id
-
-    if request.method == 'POST':
-        rango.delete()
-
-        messages.success(
-            request,
-            'El rango de referencia fue eliminado correctamente.'
+        # 2. Generar el comprobante (se autogenera el CAP por el método save del modelo Comprobante)
+        comprobante = Comprobante.objects.create(
+            solicitud=solicitud,
+            muestra=muestra,
+            numero_paciente=solicitud.paciente.id
         )
 
-    return redirect(
-        'analisis_bioquimico:estudio_rangos',
-        estudio_id=estudio_id
-    )
+        # 3. Cambiar el estado de la solicitud a 'En Proceso' (Ajustar según tus registros en EstadoSolicitud)
+        # Si tienes el registro en BD, puedes buscarlo o asignarlo directamente:
+        # estado_proceso = EstadoSolicitud.objects.get(nombre='En Proceso')
+        # solicitud.estado = estado_proceso
+        # solicitud.save()
+
+        messages.success(
+            request, 
+            f"Extracción registrada exitosamente. "
+            f"Muestra #{muestra.id} asignada. CAP generado: {comprobante.cap}"
+        )
+        return redirect('analisis_bioquimico:sala_extraccion')
+
+    return render(request, 'analisis_bioquimico/laboratorio/registrar_extraccion.html', {
+        'solicitud': solicitud,
+        'extraccionistas': extraccionistas
+    })
+

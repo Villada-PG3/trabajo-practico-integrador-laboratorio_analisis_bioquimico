@@ -51,3 +51,5 @@ path(
     name='rango_eliminar'
 ),
 ]
+]
+
