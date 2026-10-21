@@ -355,32 +355,38 @@ def panel_recepcion(request):
     )
 
 
+
 def panel_extraccion(request):
-
     if not request.user.is_authenticated:
+        return redirect('analisis_bioquimico:login')
 
-        return redirect(
-            'analisis_bioquimico:login'
-        )
-
-    if not hasattr(
-        request.user,
-        'extraccionista'
-    ):
-
+    if not hasattr(request.user, 'extraccionista'):
         messages.error(
             request,
             'No tiene permisos para acceder a Extracción.'
         )
+        return redirect('analisis_bioquimico:login')
 
-        return redirect(
-            'analisis_bioquimico:login'
+    solicitudes_pendientes = (
+        SolicitudAnalisis.objects.filter(
+            estado__nombre__iexact='Pendiente de muestra'
         )
+        .select_related('paciente', 'estado')
+        .prefetch_related('solicitudestudio_set__estudio')
+        .order_by('fecha_hora', 'id')
+    )
+
+    context = {
+        'solicitudes': solicitudes_pendientes,
+        'extraccionista': request.user.extraccionista,
+    }
 
     return render(
         request,
-        'analisis_bioquimico/personal/panel_extraccion.html'
+        'analisis_bioquimico/personal/panel_extraccion.html',
+        context
     )
+
 
 
 def panel_laboratorio(request):
