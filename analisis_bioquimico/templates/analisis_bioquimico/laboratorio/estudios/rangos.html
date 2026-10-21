@@ -1,0 +1,125 @@
+{% extends "analisis_bioquimico/base.html" %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <h2>Rangos de referencia</h2>
+
+    <h4>
+        {{ estudio.codigo }} - {{ estudio.nombre }}
+    </h4>
+
+    <p>
+        <strong>Método/Técnica:</strong>
+        {{ estudio.metodo_tecnica|default:"No especificado" }}
+    </p>
+
+    <p>
+        <strong>Unidad:</strong>
+        {{ estudio.unidad_medida|default:"No especificada" }}
+    </p>
+
+    <hr>
+
+
+    <h4>Agregar rango</h4>
+
+    <form method="post">
+
+        {% csrf_token %}
+
+        {{ form.as_p }}
+
+        <button type="submit" class="btn btn-success">
+            Agregar rango
+        </button>
+
+    </form>
+
+
+    <hr>
+
+
+    <h4>Rangos registrados</h4>
+
+
+    {% if rangos %}
+
+        <table class="table table-bordered">
+
+            <thead>
+
+                <tr>
+                    <th>Valor mínimo</th>
+                    <th>Valor máximo</th>
+                    <th>Género</th>
+                    <th>Edad mínima</th>
+                    <th>Edad máxima</th>
+                    <th>Acciones</th>
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for rango in rangos %}
+
+                    <tr>
+
+                        <td>{{ rango.valor_min }}</td>
+
+                        <td>{{ rango.valor_max }}</td>
+
+                        <td>{{ rango.genero|default:"Todos" }}</td>
+
+                        <td>{{ rango.edad_min }}</td>
+
+                        <td>{{ rango.edad_max }}</td>
+
+                        <td>
+
+                            <form
+                                method="post"
+                                action="{% url 'analisis_bioquimico:rango_eliminar' rango.id %}"
+                            >
+
+                                {% csrf_token %}
+
+                                <button
+                                    type="submit"
+                                    class="btn btn-danger btn-sm"
+                                >
+                                    Eliminar
+                                </button>
+
+                            </form>
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    {% else %}
+
+        <p>
+            Este estudio todavía no posee rangos de referencia.
+        </p>
+
+    {% endif %}
+
+
+    <a href="{% url 'analisis_bioquimico:estudios_lista' %}"
+       class="btn btn-secondary">
+        Volver a estudios
+    </a>
+
+</div>
+
+{% endblock %}

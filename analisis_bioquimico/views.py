@@ -3,12 +3,11 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.core.mail import send_mail
 from .models import (
-    Paciente, Medico, Recepcionista, EstadoSolicitud, 
-    Receta, SolicitudAnalisis, SolicitudEstudio, Resultado, 
-    RangoReferencia, Comprobante
+    Paciente, Medico, Recepcionista, EstadoSolicitud,
+    Estudio, Receta, SolicitudAnalisis, SolicitudEstudio,
+    Resultado, RangoReferencia, Comprobante
 )
-from .forms import CrearSolicitudForm
-
+from .forms import CrearSolicitudForm, EstudioForm, RangoReferenciaForm
 
 # ==========================================
 # SECCIÓN: PORTAL DE PACIENTES (INTEGRANTE 3)
@@ -224,3 +223,151 @@ def recepcion_crear_solicitud(request):
         form = CrearSolicitudForm(initial=initial_data)
 
     return render(request, 'analisis_bioquimico/recepcion/crear_solicitud.html', {'form': form})
+
+# ==========================================
+# SECCIÓN: MÓDULO 2 - GESTIÓN DE ESTUDIOS
+# ==========================================
+
+def estudios_lista(request):
+    estudios = Estudio.objects.all().order_by('codigo')
+
+    return render(
+        request,
+        'analisis_bioquimico/laboratorio/estudios/lista.html',
+        {'estudios': estudios}
+    )
+
+
+def estudio_crear(request):
+    if request.method == 'POST':
+        form = EstudioForm(request.POST)
+
+        if form.is_valid():
+            estudio = form.save()
+
+            messages.success(
+                request,
+                f'El estudio "{estudio.nombre}" fue creado correctamente.'
+            )
+
+            return redirect('analisis_bioquimico:estudios_lista')
+
+    else:
+        form = EstudioForm()
+
+    return render(
+        request,
+        'analisis_bioquimico/laboratorio/estudios/formulario.html',
+        {
+            'form': form,
+            'titulo': 'Nuevo estudio',
+        }
+    )
+
+
+def estudio_editar(request, estudio_id):
+    estudio = get_object_or_404(Estudio, id=estudio_id)
+
+    if request.method == 'POST':
+        form = EstudioForm(request.POST, instance=estudio)
+
+        if form.is_valid():
+            form.save()
+
+            messages.success(
+                request,
+                f'El estudio "{estudio.nombre}" fue actualizado correctamente.'
+            )
+
+            return redirect('analisis_bioquimico:estudios_lista')
+
+    else:
+        form = EstudioForm(instance=estudio)
+
+    return render(
+        request,
+        'analisis_bioquimico/laboratorio/estudios/formulario.html',
+        {
+            'form': form,
+            'titulo': 'Editar estudio',
+            'estudio': estudio,
+        }
+    )
+
+
+def estudio_eliminar(request, estudio_id):
+    estudio = get_object_or_404(Estudio, id=estudio_id)
+
+    if request.method == 'POST':
+        nombre = estudio.nombre
+        estudio.delete()
+
+        messages.success(
+            request,
+            f'El estudio "{nombre}" fue eliminado correctamente.'
+        )
+
+        return redirect('analisis_bioquimico:estudios_lista')
+
+    return render(
+        request,
+        'analisis_bioquimico/laboratorio/estudios/eliminar.html',
+        {'estudio': estudio}
+    )
+
+
+def estudio_rangos(request, estudio_id):
+    estudio = get_object_or_404(Estudio, id=estudio_id)
+
+    rangos = RangoReferencia.objects.filter(
+        estudio=estudio
+    ).order_by('edad_min')
+
+    if request.method == 'POST':
+        form = RangoReferenciaForm(request.POST)
+
+        if form.is_valid():
+            rango = form.save(commit=False)
+            rango.estudio = estudio
+            rango.save()
+
+            messages.success(
+                request,
+                'El rango de referencia fue agregado correctamente.'
+            )
+
+            return redirect(
+                'analisis_bioquimico:estudio_rangos',
+                estudio_id=estudio.id
+            )
+
+    else:
+        form = RangoReferenciaForm()
+
+    return render(
+        request,
+        'analisis_bioquimico/laboratorio/estudios/rangos.html',
+        {
+            'estudio': estudio,
+            'rangos': rangos,
+            'form': form,
+        }
+    )
+
+
+def rango_eliminar(request, rango_id):
+    rango = get_object_or_404(RangoReferencia, id=rango_id)
+    estudio_id = rango.estudio.id
+
+    if request.method == 'POST':
+        rango.delete()
+
+        messages.success(
+            request,
+            'El rango de referencia fue eliminado correctamente.'
+        )
+
+    return redirect(
+        'analisis_bioquimico:estudio_rangos',
+        estudio_id=estudio_id
+    )
