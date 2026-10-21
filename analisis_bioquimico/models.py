@@ -1,6 +1,6 @@
 import uuid
 from django.db import models
-
+from django.contrib.auth.models import User
 
 class Paciente(models.Model):
     nombre = models.CharField(max_length=100)
@@ -28,6 +28,13 @@ class Medico(models.Model):
 
 
 class Recepcionista(models.Model):
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='recepcionista'
+    )
     nombre = models.CharField(max_length=100)
     apellido = models.CharField(max_length=100)
     email = models.EmailField(blank=True, null=True)
@@ -37,6 +44,13 @@ class Recepcionista(models.Model):
 
 
 class Extraccionista(models.Model):
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='extraccionista'
+    )
     nombre = models.CharField(max_length=100)
     apellido = models.CharField(max_length=100)
     email = models.EmailField(blank=True, null=True)
@@ -47,6 +61,13 @@ class Extraccionista(models.Model):
 
 
 class ResponsableAnalisis(models.Model):
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='responsable_analisis'
+    )
     nombre = models.CharField(max_length=100)
     apellido = models.CharField(max_length=100)
     email = models.EmailField(blank=True, null=True)
