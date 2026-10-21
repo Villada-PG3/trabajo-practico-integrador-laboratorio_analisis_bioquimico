@@ -1,6 +1,6 @@
 from django import forms
 from datetime import date, timedelta
-from .models import Paciente, Medico, Estudio
+from .models import Paciente, Medico, Estudio, RangoReferencia
 
 
 class CrearSolicitudForm(forms.Form):
@@ -48,3 +48,97 @@ class CrearSolicitudForm(forms.Form):
                 )
 
         return fecha_emision
+    
+class EstudioForm(forms.ModelForm):
+    class Meta:
+        model = Estudio
+        fields = [
+            'codigo',
+            'nombre',
+            'descripcion',
+            'metodo_tecnica',
+            'unidad_medida',
+        ]
+
+        widgets = {
+            'codigo': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ej: 412'
+            }),
+            'nombre': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ej: Glucemia'
+            }),
+            'descripcion': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+            }),
+            'metodo_tecnica': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ej: Enzimático - Autoanalizador'
+            }),
+            'unidad_medida': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ej: mg/dL'
+            }),
+        }
+
+
+class RangoReferenciaForm(forms.ModelForm):
+    class Meta:
+        model = RangoReferencia
+        fields = [
+            'valor_min',
+            'valor_max',
+            'genero',
+            'edad_min',
+            'edad_max',
+        ]
+
+        widgets = {
+            'valor_min': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': 'any'
+            }),
+            'valor_max': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': 'any'
+            }),
+            'genero': forms.TextInput(attrs={
+                'class': 'form-control'
+            }),
+            'edad_min': forms.NumberInput(attrs={
+                'class': 'form-control'
+            }),
+            'edad_max': forms.NumberInput(attrs={
+                'class': 'form-control'
+            }),
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        valor_min = cleaned_data.get('valor_min')
+        valor_max = cleaned_data.get('valor_max')
+        edad_min = cleaned_data.get('edad_min')
+        edad_max = cleaned_data.get('edad_max')
+
+        if (
+            valor_min is not None
+            and valor_max is not None
+            and valor_min > valor_max
+        ):
+            raise forms.ValidationError(
+                'El valor mínimo no puede ser mayor que el valor máximo.'
+            )
+
+        if (
+            edad_min is not None
+            and edad_max is not None
+            and edad_min > edad_max
+        ):
+            raise forms.ValidationError(
+                'La edad mínima no puede ser mayor que la edad máxima.'
+            )
+
+        return cleaned_data

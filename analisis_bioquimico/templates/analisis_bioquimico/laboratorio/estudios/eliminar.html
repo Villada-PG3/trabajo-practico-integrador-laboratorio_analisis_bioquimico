@@ -1,0 +1,37 @@
+{% extends "analisis_bioquimico/base.html" %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <h2>Eliminar estudio</h2>
+
+    <div class="alert alert-warning">
+
+        ¿Está seguro de que desea eliminar el estudio
+
+        <strong>
+            {{ estudio.codigo }} - {{ estudio.nombre }}
+        </strong>?
+
+    </div>
+
+
+    <form method="post">
+
+        {% csrf_token %}
+
+        <button type="submit" class="btn btn-danger">
+            Sí, eliminar
+        </button>
+
+        <a href="{% url 'analisis_bioquimico:estudios_lista' %}"
+           class="btn btn-secondary">
+            Cancelar
+        </a>
+
+    </form>
+
+</div>
+
+{% endblock %}

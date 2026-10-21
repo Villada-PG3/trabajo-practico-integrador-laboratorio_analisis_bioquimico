@@ -7,8 +7,7 @@ from .models import (
     Receta, SolicitudAnalisis, SolicitudEstudio, Resultado, 
     RangoReferencia, Comprobante, Muestra, Extraccionista
 )
-from .forms import CrearSolicitudForm
-
+from .forms import CrearSolicitudForm, EstudioForm, RangoReferenciaForm
 
 # ==========================================
 # SECCIÓN: PORTAL DE PACIENTES (INTEGRANTE 3)
