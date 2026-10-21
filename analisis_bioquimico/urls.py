@@ -1,85 +1,140 @@
 from django.urls import path
 from . import views
 
+
 app_name = "analisis_bioquimico"
 
+
 urlpatterns = [
-    path("", views.home, name="home"),
-    
-    # Rutas del Módulo 1 (Recepción, Pacientes y Médicos)
-    path('recepcion/solicitud/nueva/', views.recepcion_crear_solicitud, name='recepcion_crear_solicitud'),
-    
-    # Rutas del Módulo 3 (Portal del Paciente)
-    path('portal/login/', views.login_paciente, name='login_paciente'),
-    path('portal/logout/', views.logout_paciente, name='logout_paciente'),
-    path('portal/historial/', views.historial_solicitudes, name='portal_historial'),
-    path('recepcion/pacientes/', views.login_paciente, name='login'),
-    # Rutas del Módulo 2 (Extracción y Laboratorio)
-path(
-    'laboratorio/estudios/',
-    views.estudios_lista,
-    name='estudios_lista'
-),
 
-path(
-    'laboratorio/estudios/nuevo/',
-    views.estudio_crear,
-    name='estudio_crear'
-),
+    # ==========================================
+    # HOME
+    # ==========================================
 
-path(
-    'laboratorio/estudios/<int:estudio_id>/editar/',
-    views.estudio_editar,
-    name='estudio_editar'
-),
+    path(
+        "",
+        views.home,
+        name="home"
+    ),
 
-path(
-    'laboratorio/estudios/<int:estudio_id>/eliminar/',
-    views.estudio_eliminar,
-    name='estudio_eliminar'
-),
 
-path(
-    'laboratorio/estudios/<int:estudio_id>/rangos/',
-    views.estudio_rangos,
-    name='estudio_rangos'
-),
+    # ==========================================
+    # ACCESO / PORTAL DEL PACIENTE
+    # ==========================================
 
-path(
-    'laboratorio/rangos/<int:rango_id>/eliminar/',
-    views.rango_eliminar,
-    name='rango_eliminar'
-),
-# Login de Personal
-path(
-    'personal/login/',
-    views.login_personal,
-    name='login_personal'
-),
+    # Login unificado:
+    # Paciente + Personal
+    path(
+        'recepcion/pacientes/',
+        views.login_paciente,
+        name='login'
+    ),
 
-path(
-    'personal/logout/',
-    views.logout_personal,
-    name='logout_personal'
-),
+    path(
+        'portal/login/',
+        views.login_paciente,
+        name='login_paciente'
+    ),
 
-path(
-    'personal/recepcion/',
-    views.panel_recepcion,
-    name='panel_recepcion'
-),
+    path(
+        'portal/logout/',
+        views.logout_paciente,
+        name='logout_paciente'
+    ),
 
-path(
-    'personal/extraccion/',
-    views.panel_extraccion,
-    name='panel_extraccion'
-),
+    path(
+        'portal/historial/',
+        views.historial_solicitudes,
+        name='portal_historial'
+    ),
 
-path(
-    'personal/laboratorio/',
-    views.panel_laboratorio,
-    name='panel_laboratorio'
-),
 
+    # ==========================================
+    # LOGIN / PANELES DE PERSONAL
+    # ==========================================
+
+    # Esta URL procesa el formulario del personal.
+    # Si se abre manualmente por GET,
+    # vuelve al login unificado.
+    path(
+        'personal/login/',
+        views.login_personal,
+        name='login_personal'
+    ),
+
+    path(
+        'personal/logout/',
+        views.logout_personal,
+        name='logout_personal'
+    ),
+
+    path(
+        'personal/recepcion/',
+        views.panel_recepcion,
+        name='panel_recepcion'
+    ),
+
+    path(
+        'personal/extraccion/',
+        views.panel_extraccion,
+        name='panel_extraccion'
+    ),
+
+    path(
+        'personal/laboratorio/',
+        views.panel_laboratorio,
+        name='panel_laboratorio'
+    ),
+
+
+    # ==========================================
+    # MÓDULO 1 - RECEPCIÓN
+    # ==========================================
+
+    path(
+        'recepcion/solicitud/nueva/',
+        views.recepcion_crear_solicitud,
+        name='recepcion_crear_solicitud'
+    ),
+
+
+    # ==========================================
+    # MÓDULO 2 - GESTIÓN DE ESTUDIOS
+    # ==========================================
+
+    path(
+        'laboratorio/estudios/',
+        views.estudios_lista,
+        name='estudios_lista'
+    ),
+
+    path(
+        'laboratorio/estudios/nuevo/',
+        views.estudio_crear,
+        name='estudio_crear'
+    ),
+
+    path(
+        'laboratorio/estudios/<int:estudio_id>/editar/',
+        views.estudio_editar,
+        name='estudio_editar'
+    ),
+
+    path(
+        'laboratorio/estudios/<int:estudio_id>/eliminar/',
+        views.estudio_eliminar,
+        name='estudio_eliminar'
+    ),
+
+    path(
+        'laboratorio/estudios/<int:estudio_id>/rangos/',
+        views.estudio_rangos,
+        name='estudio_rangos'
+    ),
+
+    path(
+        'laboratorio/rangos/<int:rango_id>/eliminar/',
+        views.rango_eliminar,
+        name='rango_eliminar'
+    ),
 ]
-
