@@ -50,6 +50,36 @@ path(
     views.rango_eliminar,
     name='rango_eliminar'
 ),
-]
+# Login de Personal
+path(
+    'personal/login/',
+    views.login_personal,
+    name='login_personal'
+),
+
+path(
+    'personal/logout/',
+    views.logout_personal,
+    name='logout_personal'
+),
+
+path(
+    'personal/recepcion/',
+    views.panel_recepcion,
+    name='panel_recepcion'
+),
+
+path(
+    'personal/extraccion/',
+    views.panel_extraccion,
+    name='panel_extraccion'
+),
+
+path(
+    'personal/laboratorio/',
+    views.panel_laboratorio,
+    name='panel_laboratorio'
+),
+
 ]
 

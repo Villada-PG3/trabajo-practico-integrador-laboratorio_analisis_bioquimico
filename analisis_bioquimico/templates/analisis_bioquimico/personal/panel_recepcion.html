@@ -1,0 +1,20 @@
+{% extends "analisis_bioquimico/base.html" %}
+
+{% block content %}
+
+<div class="container mt-5">
+
+    <h2>
+        Panel de Recepción
+    </h2>
+
+    <a
+        href="{% url 'analisis_bioquimico:recepcion_crear_solicitud' %}"
+        class="btn btn-primary mt-3"
+    >
+        Nueva Solicitud
+    </a>
+
+</div>
+
+{% endblock %}

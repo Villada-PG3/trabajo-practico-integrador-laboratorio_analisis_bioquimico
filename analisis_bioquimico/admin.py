@@ -29,16 +29,18 @@ class MedicoAdmin(admin.ModelAdmin):
     list_filter = ('validado_colegio', 'especialidad')
 
 class RecepcionistaAdmin(admin.ModelAdmin):
-    list_display = ('id', 'apellido', 'nombre', 'email')
-    search_fields = ('apellido', 'nombre')
+    list_display = ('id', 'user', 'apellido', 'nombre', 'email')
+    search_fields = ('apellido', 'nombre', 'user__username')
+
 
 class ExtraccionistaAdmin(admin.ModelAdmin):
-    list_display = ('id', 'apellido', 'nombre', 'legajo')
-    search_fields = ('apellido', 'nombre', 'legajo')
+    list_display = ('id', 'user', 'apellido', 'nombre', 'legajo')
+    search_fields = ('apellido', 'nombre', 'legajo', 'user__username')
+
 
 class ResponsableAnalisisAdmin(admin.ModelAdmin):
-    list_display = ('id', 'apellido', 'nombre', 'legajo', 'cargo')
-    search_fields = ('apellido', 'nombre', 'legajo')
+    list_display = ('id', 'user', 'apellido', 'nombre', 'legajo', 'cargo')
+    search_fields = ('apellido', 'nombre', 'legajo', 'user__username')
 
 class EstadoSolicitudAdmin(admin.ModelAdmin):
     list_display = ('id', 'nombre', 'descripcion')

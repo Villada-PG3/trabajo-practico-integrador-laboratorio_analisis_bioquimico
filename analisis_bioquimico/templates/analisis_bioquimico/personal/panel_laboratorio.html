@@ -1,0 +1,20 @@
+{% extends "analisis_bioquimico/base.html" %}
+
+{% block content %}
+
+<div class="container mt-5">
+
+    <h2 class="mb-4">
+        Panel de Laboratorio
+    </h2>
+
+    <a
+        href="{% url 'analisis_bioquimico:estudios_lista' %}"
+        class="btn btn-primary"
+    >
+        Gestión de Estudios
+    </a>
+
+</div>
+
+{% endblock %}
