@@ -59,7 +59,14 @@
                 <div class="mb-3">
                     <label class="form-label fw-bold">{{ form.estudios.label }}</label>
                     <div class="border rounded p-3 bg-light">
-                        {{ form.estudios }}
+                        {% for checkbox in form.estudios %}
+                            <div class="form-check mb-2">
+                                {{ checkbox.tag }}
+                                <label class="form-check-label" for="{{ checkbox.id_for_label }}">
+                                    {{ checkbox.choice_label }}
+                                </label>
+                            </div>
+                        {% endfor %}
                     </div>
                     {% if form.estudios.errors %}
                         <div class="text-danger small">{{ form.estudios.errors }}</div>
