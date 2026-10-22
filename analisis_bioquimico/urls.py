@@ -79,7 +79,16 @@ urlpatterns = [
         views.panel_extraccion,
         name='panel_extraccion'
     ),
-
+    path(
+        'personal/extraccion/<int:solicitud_id>/registrar/',
+        views.registrar_extraccion,
+        name='registrar_extraccion'
+    ),
+    path(
+    'personal/extraccion/comprobante/<int:comprobante_id>/',
+    views.comprobante_extraccion,
+    name='comprobante_extraccion'
+    ),
     path(
         'personal/laboratorio/',
         views.panel_laboratorio,

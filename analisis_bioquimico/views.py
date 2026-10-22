@@ -866,53 +866,61 @@ def sala_extraccion(request):
     )
 
 
-def registrar_extraccion(
-    request,
-    solicitud_id
-):
+def registrar_extraccion(request, solicitud_id):
     """
-    Registra la toma de muestra y genera
-    el comprobante.
+    Permite al extraccionista autenticado confirmar la toma de muestra.
+    Registra la muestra, cambia la solicitud a Pendiente de análisis
+    y genera el comprobante con su CAP.
     """
+
+    if not request.user.is_authenticated:
+        return redirect('analisis_bioquimico:login')
+
+    if not hasattr(request.user, 'extraccionista'):
+        messages.error(
+            request,
+            'No tiene permisos para registrar una extracción.'
+        )
+        return redirect('analisis_bioquimico:login')
+
+    extraccionista = request.user.extraccionista
 
     solicitud = get_object_or_404(
         SolicitudAnalisis,
-        id=solicitud_id
+        id=solicitud_id,
+        estado__nombre__iexact='Pendiente de muestra'
     )
 
-    extraccionistas = (
-        Extraccionista.objects.all()
-    )
+    estudios = SolicitudEstudio.objects.filter(
+        solicitud=solicitud
+    ).select_related('estudio')
 
     if request.method == 'POST':
 
-        extraccionista_id = request.POST.get(
-            'extraccionista_id'
-        )
-
         tipo_muestra = request.POST.get(
             'tipo_muestra',
-            'Sangre'
-        )
+            ''
+        ).strip()
 
-        if not extraccionista_id:
-
+        if not tipo_muestra:
             messages.error(
                 request,
-                'Debe seleccionar el extraccionista a cargo.'
+                'Debe indicar el tipo de muestra.'
             )
 
-            return redirect(
-                'analisis_bioquimico:registrar_extraccion',
-                solicitud_id=solicitud.id
+            return render(
+                request,
+                'analisis_bioquimico/personal/registrar_extraccion.html',
+                {
+                    'solicitud': solicitud,
+                    'estudios': estudios,
+                    'extraccionista': extraccionista,
+                }
             )
 
-        extraccionista = get_object_or_404(
-            Extraccionista,
-            id=extraccionista_id
-        )
-
-        # 1. Crear muestra
+        # ==========================================
+        # 1. CREAR MUESTRA
+        # ==========================================
 
         muestra = Muestra.objects.create(
             solicitud=solicitud,
@@ -920,37 +928,94 @@ def registrar_extraccion(
             tipo=tipo_muestra
         )
 
-        # 2. Crear comprobante
+        # ==========================================
+        # 2. GENERAR COMPROBANTE + CAP
+        # ==========================================
 
-        comprobante = (
-            Comprobante.objects.create(
-                solicitud=solicitud,
-                muestra=muestra,
-                numero_paciente=(
-                    solicitud.paciente.id
-                )
+        comprobante = Comprobante.objects.create(
+            solicitud=solicitud,
+            muestra=muestra,
+            numero_paciente=solicitud.paciente.id
+        )
+
+        # La CAP se genera automáticamente
+        # en Comprobante.save()
+
+        # ==========================================
+        # 3. CAMBIAR ESTADO
+        # ==========================================
+
+        estado_pendiente_analisis, _ = (
+            EstadoSolicitud.objects.get_or_create(
+                nombre='Pendiente de análisis',
+                defaults={
+                    'descripcion':
+                    'La toma de muestra fue completada y '
+                    'la solicitud espera ser analizada.'
+                }
             )
         )
 
+        solicitud.estado = estado_pendiente_analisis
+        solicitud.save()
+
         messages.success(
             request,
-            'Extracción registrada '
-            'exitosamente. '
-            f'Muestra #{muestra.id} '
-            f'asignada. '
-            f'CAP generado: '
-            f'{comprobante.cap}'
+            f'Extracción registrada correctamente. '
+            f'CAP generada: {comprobante.cap}'
         )
 
+        # En vez de volver directamente al panel,
+        # mostramos el comprobante.
         return redirect(
-            'analisis_bioquimico:sala_extraccion'
+            'analisis_bioquimico:comprobante_extraccion',
+            comprobante_id=comprobante.id
         )
 
     return render(
         request,
-        'analisis_bioquimico/laboratorio/registrar_extraccion.html',
+        'analisis_bioquimico/personal/registrar_extraccion.html',
         {
             'solicitud': solicitud,
-            'extraccionistas': extraccionistas
+            'estudios': estudios,
+            'extraccionista': extraccionista,
+        }
+    )
+def comprobante_extraccion(request, comprobante_id):
+    """
+    Muestra el comprobante generado después de la extracción.
+    """
+
+    if not request.user.is_authenticated:
+        return redirect('analisis_bioquimico:login')
+
+    if not hasattr(request.user, 'extraccionista'):
+        messages.error(
+            request,
+            'No tiene permisos para ver este comprobante.'
+        )
+        return redirect('analisis_bioquimico:login')
+
+    comprobante = get_object_or_404(
+        Comprobante.objects.select_related(
+            'solicitud__paciente',
+            'solicitud__receta__medico',
+            'muestra__extraccionista'
+        ),
+        id=comprobante_id
+    )
+
+    estudios = SolicitudEstudio.objects.filter(
+        solicitud=comprobante.solicitud
+    ).select_related('estudio')
+
+    return render(
+        request,
+        'analisis_bioquimico/personal/comprobante_extraccion.html',
+        {
+            'comprobante': comprobante,
+            'solicitud': comprobante.solicitud,
+            'muestra': comprobante.muestra,
+            'estudios': estudios,
         }
     )
