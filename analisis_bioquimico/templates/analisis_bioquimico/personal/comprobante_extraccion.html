@@ -1,0 +1,211 @@
+{% extends "analisis_bioquimico/base.html" %}
+
+{% block content %}
+
+<div class="container mt-5">
+
+    <div class="row justify-content-center">
+
+        <div class="col-lg-7">
+
+            <div class="card shadow">
+
+                <div class="card-header bg-primary text-white text-center">
+
+                    <h4 class="mb-0">
+                        Laboratorio SAC
+                    </h4>
+
+                    <small>
+                        Comprobante de Extracción
+                    </small>
+
+                </div>
+
+
+                <div class="card-body">
+
+                    <h5 class="mb-4">
+                        Solicitud #{{ solicitud.id }}
+                    </h5>
+
+
+                    <p>
+                        <strong>Fecha:</strong>
+                        {{ solicitud.fecha_hora|date:"d/m/Y" }}
+                    </p>
+
+                    <p>
+                        <strong>Hora:</strong>
+                        {{ solicitud.fecha_hora|date:"H:i" }}
+                    </p>
+
+
+                    <hr>
+
+
+                    <h5>
+                        Paciente
+                    </h5>
+
+                    <p>
+                        <strong>N° paciente:</strong>
+                        {{ comprobante.numero_paciente }}
+                    </p>
+
+                    <p>
+                        <strong>DNI:</strong>
+                        {{ solicitud.paciente.dni }}
+                    </p>
+
+                    <p>
+                        <strong>Nombre:</strong>
+                        {{ solicitud.paciente.apellido }},
+                        {{ solicitud.paciente.nombre }}
+                    </p>
+
+
+                    <hr>
+
+
+                    <h5>
+                        Médico solicitante
+                    </h5>
+
+                    {% if solicitud.receta and solicitud.receta.medico %}
+
+                        <p>
+                            Dr/a.
+                            {{ solicitud.receta.medico.apellido }},
+                            {{ solicitud.receta.medico.nombre }}
+                        </p>
+
+                        <p>
+                            <strong>MP:</strong>
+                            {{ solicitud.receta.medico.matricula }}
+                        </p>
+
+                    {% else %}
+
+                        <p class="text-muted">
+                            No disponible
+                        </p>
+
+                    {% endif %}
+
+
+                    <hr>
+
+
+                    <h5>
+                        Extracción
+                    </h5>
+
+                    <p>
+                        <strong>Extraccionista:</strong>
+
+                        {{ muestra.extraccionista.apellido }},
+                        {{ muestra.extraccionista.nombre }}
+                    </p>
+
+                    <p>
+                        <strong>Tipo de muestra:</strong>
+                        {{ muestra.tipo }}
+                    </p>
+
+                    <p>
+                        <strong>Fecha de extracción:</strong>
+                        {{ muestra.fecha_hora_extraccion|date:"d/m/Y H:i" }}
+                    </p>
+
+
+                    <hr>
+
+
+                    <h5>
+                        Estudios a realizar
+                    </h5>
+
+                    <p>
+                        <strong>Cantidad:</strong>
+                        {{ estudios|length }}
+                    </p>
+
+                    <ul class="list-group mb-4">
+
+                        {% for solicitud_estudio in estudios %}
+
+                            <li class="list-group-item">
+
+                                <strong>
+                                    {{ solicitud_estudio.estudio.codigo }}
+                                </strong>
+
+                                -
+
+                                {{ solicitud_estudio.estudio.nombre }}
+
+                            </li>
+
+                        {% endfor %}
+
+                    </ul>
+
+
+                    <hr>
+
+
+                    <div class="text-center">
+
+                        <p class="mb-1">
+                            Clave de Acceso Personal
+                        </p>
+
+                        <h2 class="fw-bold text-primary">
+                            {{ comprobante.cap }}
+                        </h2>
+
+                        <p class="text-muted small">
+                            Conserve esta clave para consultar
+                            sus resultados.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="card-footer">
+
+                    <div class="d-flex gap-2">
+
+                        <button
+                            type="button"
+                            class="btn btn-primary"
+                            onclick="window.print()"
+                        >
+                            <i class="bi bi-printer me-1"></i>
+                            Imprimir
+                        </button>
+
+
+                        <a
+                            href="{% url 'analisis_bioquimico:panel_extraccion' %}"
+                            class="btn btn-secondary"
+                        >
+                            Volver al Panel
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

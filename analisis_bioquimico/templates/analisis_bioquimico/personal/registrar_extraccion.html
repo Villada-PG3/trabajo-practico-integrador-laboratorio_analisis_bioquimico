@@ -1,0 +1,233 @@
+{% extends "analisis_bioquimico/base.html" %}
+
+{% block content %}
+
+<div class="container mt-5">
+
+    <div class="row justify-content-center">
+
+        <div class="col-lg-8">
+
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+
+                <div>
+
+                    <h2 class="mb-1">
+                        Registrar extracción
+                    </h2>
+
+                    <p class="text-muted mb-0">
+                        Solicitud #{{ solicitud.id }}
+                    </p>
+
+                </div>
+
+
+                <a
+                    href="{% url 'analisis_bioquimico:panel_extraccion' %}"
+                    class="btn btn-outline-secondary"
+                >
+                    Volver
+                </a>
+
+            </div>
+
+
+            <!-- DATOS DEL PACIENTE -->
+
+            <div class="card shadow-sm mb-4">
+
+                <div class="card-header">
+                    <strong>Paciente</strong>
+                </div>
+
+
+                <div class="card-body">
+
+                    <p>
+                        <strong>Nombre:</strong>
+
+                        {{ solicitud.paciente.apellido }},
+                        {{ solicitud.paciente.nombre }}
+                    </p>
+
+
+                    <p>
+                        <strong>DNI:</strong>
+
+                        {{ solicitud.paciente.dni }}
+                    </p>
+
+
+                    <p class="mb-0">
+                        <strong>Fecha de solicitud:</strong>
+
+                        {{ solicitud.fecha_hora|date:"d/m/Y H:i" }}
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- ESTUDIOS -->
+
+            <div class="card shadow-sm mb-4">
+
+                <div class="card-header">
+                    <strong>Estudios solicitados</strong>
+                </div>
+
+
+                <div class="card-body">
+
+                    {% if estudios %}
+
+                        <ul class="list-group">
+
+                            {% for solicitud_estudio in estudios %}
+
+                                <li class="list-group-item">
+
+                                    <strong>
+                                        {{ solicitud_estudio.estudio.codigo }}
+                                    </strong>
+
+                                    -
+
+                                    {{ solicitud_estudio.estudio.nombre }}
+
+                                </li>
+
+                            {% endfor %}
+
+                        </ul>
+
+                    {% else %}
+
+                        <div class="alert alert-warning mb-0">
+
+                            La solicitud no posee estudios.
+
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+
+            <!-- EXTRACCIONISTA -->
+
+            <div class="card shadow-sm mb-4">
+
+                <div class="card-body">
+
+                    <strong>Extraccionista:</strong>
+
+                    {{ extraccionista.apellido }},
+                    {{ extraccionista.nombre }}
+
+                </div>
+
+            </div>
+
+
+            <!-- CONFIRMAR -->
+
+            <div class="card shadow-sm">
+
+                <div class="card-header bg-primary text-white">
+
+                    <strong>
+                        Confirmar toma de muestra
+                    </strong>
+
+                </div>
+
+
+                <div class="card-body">
+
+                    <form method="POST">
+
+                        {% csrf_token %}
+
+
+                        <div class="mb-3">
+
+                            <label
+                                for="tipo_muestra"
+                                class="form-label fw-semibold"
+                            >
+                                Tipo de muestra
+                            </label>
+
+
+                            <select
+                                name="tipo_muestra"
+                                id="tipo_muestra"
+                                class="form-select"
+                                required
+                            >
+
+                                <option value="">
+                                    -- Seleccione --
+                                </option>
+
+                                <option value="Sangre">
+                                    Sangre
+                                </option>
+
+                                <option value="Orina">
+                                    Orina
+                                </option>
+
+                                <option value="Materia fecal">
+                                    Materia fecal
+                                </option>
+
+                                <option value="Otro">
+                                    Otro
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <div class="alert alert-warning">
+
+                            Al confirmar, se registrará la toma de muestra
+                            y la solicitud pasará al estado
+                            <strong>Pendiente de análisis</strong>.
+
+                        </div>
+
+
+                        <button
+                            type="submit"
+                            class="btn btn-success w-100"
+                        >
+
+                            <i class="bi bi-check-circle-fill me-1"></i>
+
+                            Confirmar toma de muestra
+
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
