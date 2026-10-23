@@ -1,0 +1,54 @@
+{% extends 'analisis_bioquimico/base.html' %}
+
+{% block title %}Sala de Extracción - SAC{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-journal-medical me-2"></i>Sala de Extracción / Muestras</h2>
+        <span class="badge bg-primary fs-6">{{ solicitudes.count }} Solicitudes Pendientes</span>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th># Solicitud</th>
+                            <th>Paciente</th>
+                            <th>DNI</th>
+                            <th>Fecha/Hora</th>
+                            <th>Estado</th>
+                            <th class="text-end">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sol in solicitudes %}
+                            <tr>
+                                <td><strong>#{{ sol.id }}</strong></td>
+                                <td>{{ sol.paciente.apellido }}, {{ sol.paciente.nombre }}</td>
+                                <td>{{ sol.paciente.dni }}</td>
+                                <td>{{ sol.fecha_hora|date:"d/m/Y H:i" }}</td>
+                                <td><span class="badge bg-warning text-dark">{{ sol.estado.nombre }}</span></td>
+                                <td class="text-end">
+                                    <a href="{% url 'analisis_bioquimico:registrar_extraccion' sol.id %}" class="btn btn-sm btn-success">
+                                        <i class="bi bi-droplet-half me-1"></i> Tomar Muestra
+                                    </a>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted">
+                                    <i class="bi bi-check-circle fs-3 d-block mb-2 text-success"></i>
+                                    No hay solicitudes pendientes de extracción en este momento.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

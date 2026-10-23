@@ -1019,3 +1019,50 @@ def comprobante_extraccion(request, comprobante_id):
             'estudios': estudios,
         }
     )
+def panel_bioquimico(request):
+    """
+    Muestra las solicitudes pendientes de análisis o en proceso.
+    """
+    solicitudes = SolicitudAnalisis.objects.filter(
+        estado='Pendiente de análisis'
+    ).order_by('-fecha_creacion')
+    
+    return render(request, 'analisis_bioquimico/panel_bioquimico.html', {
+        'solicitudes': solicitudes
+    })
+
+
+def cargar_resultados(request, solicitud_id):
+    """
+    Permite al bioquímico cargar los valores hallados de cada práctica
+    y cambia el estado de la solicitud a 'Finalizada'.
+    """
+    solicitud = get_object_or_404(SolicitudAnalisis, pk=solicitud_id)
+    detalles = solicitud.detalles.all()  # Ajustá 'detalles' según la relación relacionada en tu model
+
+    if request.method == 'POST':
+        # Procesar los valores ingresados desde el formulario
+        todos_cargados = True
+        
+        for detalle in detalles:
+            campo_nombre = f'valor_{detalle.id}'
+            nuevo_valor = request.POST.get(campo_nombre, '').strip()
+            
+            if nuevo_valor:
+                detalle.valor_hallado = nuevo_valor
+                detalle.save()
+            else:
+                todos_cargados = False
+
+        if todos_cargados:
+            solicitud.estado = 'Finalizada'
+            solicitud.save()
+            messages.success(request, f'Resultados de la solicitud #{solicitud.id} guardados. Estado: Finalizada.')
+            return redirect('panel_bioquimico')
+        else:
+            messages.warning(request, 'Se guardaron los valores parciales, pero aún quedan campos pendientes.')
+
+    return render(request, 'analisis_bioquimico/cargar_resultados.html', {
+        'solicitud': solicitud,
+        'detalles': detalles
+    })
