@@ -146,4 +146,6 @@ urlpatterns = [
         views.rango_eliminar,
         name='rango_eliminar'
     ),
+    path('panel-bioquimico/', views.panel_bioquimico, name='panel_bioquimico'),
+    path('cargar-resultados/<int:solicitud_id>/', views.cargar_resultados, name='cargar_resultados'),
 ]

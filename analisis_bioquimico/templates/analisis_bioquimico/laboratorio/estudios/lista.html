@@ -5,14 +5,18 @@
 <div class="container mt-4">
 
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Estudios del laboratorio</h2>
+        <div class="d-flex align-items-center gap-3">
+            <a href="javascript:history.back()" class="btn btn-outline-secondary" title="Volver">
+                ← Volver
+            </a>
+            <h2 class="mb-0">Estudios del laboratorio</h2>
+        </div>
 
         <a href="{% url 'analisis_bioquimico:estudio_crear' %}"
            class="btn btn-primary">
             Nuevo estudio
         </a>
     </div>
-
 
     {% if messages %}
         {% for message in messages %}

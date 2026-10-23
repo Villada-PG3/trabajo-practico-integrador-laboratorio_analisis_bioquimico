@@ -1,0 +1,44 @@
+{% extends 'analisis_bioquimico/base.html' %}
+
+{% block title %}Registrar Extracción - SAC{% endblock %}
+
+{% block content %}
+<div class="container my-4" style="max-width: 600px;">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="card-title mb-0"><i class="bi bi-eyedropper me-2"></i>Registrar Toma de Muestra</h5>
+        </div>
+        <div class="card-body">
+            <div class="mb-3">
+                <p class="mb-1"><strong>Paciente:</strong> {{ solicitud.paciente.apellido }}, {{ solicitud.paciente.nombre }}</p>
+                <p class="mb-1"><strong>DNI:</strong> {{ solicitud.paciente.dni }}</p>
+                <p class="mb-0"><strong>Solicitud N°:</strong> #{{ solicitud.id }}</p>
+            </div>
+            <hr>
+            
+            <form method="POST">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="extraccionista_id" class="form-label fw-bold">Extraccionista a Cargo</label>
+                    <select name="extraccionista_id" id="extraccionista_id" class="form-select" required>
+                        <option value="" selected disabled>Seleccionar profesional...</option>
+                        {% for ext in extraccionistas %}
+                            <option value="{{ ext.id }}">{{ ext.apellido }}, {{ ext.nombre }} (Legajo: {{ ext.legajo }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="tipo_muestra" class="form-label fw-bold">Tipo de Muestra</label>
+                    <input type="text" name="tipo_muestra" id="tipo_muestra" class="form-control" value="Sangre" required>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'analisis_bioquimico:sala_extraccion' %}" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-success"><i class="bi bi-check-lg me-1"></i> Confirmar Extracción</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
