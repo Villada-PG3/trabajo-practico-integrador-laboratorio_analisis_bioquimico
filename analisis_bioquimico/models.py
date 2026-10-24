@@ -150,7 +150,7 @@ class Muestra(models.Model):
 
 
 class Resultado(models.Model):
-    solicitud_estudio = models.ForeignKey(SolicitudEstudio, on_delete=models.CASCADE)
+    solicitud_estudio = models.OneToOneField(SolicitudEstudio, on_delete=models.CASCADE)
     responsable = models.ForeignKey(ResponsableAnalisis, on_delete=models.CASCADE)
     valor_hallado = models.FloatField()
     fecha_registro = models.DateTimeField(auto_now_add=True)

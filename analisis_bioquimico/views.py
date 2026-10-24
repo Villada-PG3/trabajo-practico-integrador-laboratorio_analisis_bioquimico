@@ -3,6 +3,9 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.core.mail import send_mail
+from django.db import transaction
+from django.views.decorators.http import require_http_methods
+from decimal import Decimal, InvalidOperation
 
 from .models import (
     Paciente,
@@ -1019,50 +1022,202 @@ def comprobante_extraccion(request, comprobante_id):
             'estudios': estudios,
         }
     )
+
 def panel_bioquimico(request):
     """
-    Muestra las solicitudes pendientes de análisis o en proceso.
+    Muestra las solicitudes pendientes de análisis
+    y aquellas que ya están en análisis.
     """
+
+    if not request.user.is_authenticated:
+        return redirect('analisis_bioquimico:login')
+
+    if not hasattr(request.user, 'responsable_analisis'):
+        messages.error(
+            request,
+            'No tiene permisos para acceder al panel del bioquímico.'
+        )
+        return redirect('analisis_bioquimico:login')
+
     solicitudes = SolicitudAnalisis.objects.filter(
-        estado='Pendiente de análisis'
-    ).order_by('-fecha_creacion')
-    
-    return render(request, 'analisis_bioquimico/panel_bioquimico.html', {
-        'solicitudes': solicitudes
-    })
+        estado__nombre__in=[
+            'Pendiente de análisis',
+            'En análisis'
+        ]
+    ).select_related(
+        'paciente',
+        'estado'
+    ).order_by('fecha_hora', 'id')
+
+    return render(
+        request,
+        'analisis_bioquimico/personal/panel_bioquimico.html',
+        {'solicitudes': solicitudes}
+    )
 
 
+@require_http_methods(["GET", "POST"])
 def cargar_resultados(request, solicitud_id):
     """
-    Permite al bioquímico cargar los valores hallados de cada práctica
-    y cambia el estado de la solicitud a 'Finalizada'.
+    Permite registrar los resultados de los estudios
+    de una solicitud y actualizar su estado.
     """
-    solicitud = get_object_or_404(SolicitudAnalisis, pk=solicitud_id)
-    detalles = solicitud.detalles.all()  # Ajustá 'detalles' según la relación relacionada en tu model
+
+    if not request.user.is_authenticated:
+        return redirect('analisis_bioquimico:login')
+
+    if not hasattr(request.user, 'responsable_analisis'):
+        messages.error(
+            request,
+            'No tiene permisos para cargar resultados.'
+        )
+        return redirect('analisis_bioquimico:login')
+
+    solicitud = get_object_or_404(
+        SolicitudAnalisis.objects.select_related(
+            'paciente',
+            'estado'
+        ),
+        pk=solicitud_id,
+        estado__nombre__in=[
+            'Pendiente de análisis',
+            'En análisis'
+        ]
+    )
+
+    detalles = SolicitudEstudio.objects.filter(
+        solicitud=solicitud
+    ).select_related('estudio').order_by('id')
+
+    resultados_existentes = {
+        resultado.solicitud_estudio_id: resultado
+        for resultado in Resultado.objects.filter(
+            solicitud_estudio__solicitud=solicitud
+        ).order_by('id')
+    }
 
     if request.method == 'POST':
-        # Procesar los valores ingresados desde el formulario
-        todos_cargados = True
-        
+        valores_nuevos = {}
+
+        # Validar todos los valores antes de guardar.
         for detalle in detalles:
-            campo_nombre = f'valor_{detalle.id}'
-            nuevo_valor = request.POST.get(campo_nombre, '').strip()
-            
-            if nuevo_valor:
-                detalle.valor_hallado = nuevo_valor
-                detalle.save()
+            campo = f'valor_{detalle.id}'
+            texto = request.POST.get(campo, '').strip()
+
+            if not texto:
+                continue
+
+            try:
+                valor = Decimal(texto.replace(',', '.'))
+
+                if not valor.is_finite():
+                    raise InvalidOperation
+
+                valores_nuevos[detalle.id] = float(valor)
+
+            except (InvalidOperation, ValueError, OverflowError):
+                messages.error(
+                    request,
+                    f'Valor inválido para {detalle.estudio.nombre}.'
+                )
+                return redirect(
+                    'analisis_bioquimico:cargar_resultados',
+                    solicitud_id=solicitud.id
+                )
+
+        with transaction.atomic():
+
+            solicitud = SolicitudAnalisis.objects.select_for_update().get(
+                pk=solicitud.id
+            )
+
+            if solicitud.estado.nombre not in [
+                'Pendiente de análisis',
+                'En análisis'
+            ]:
+                messages.warning(
+                    request,
+                    'La solicitud ya no admite nuevos resultados.'
+                )
+                return redirect(
+                    'analisis_bioquimico:panel_bioquimico'
+                )
+
+            responsable = request.user.responsable_analisis
+
+            for detalle in detalles:
+                if detalle.id not in valores_nuevos:
+                    continue
+
+                Resultado.objects.update_or_create(
+                    solicitud_estudio=detalle,
+                    defaults={
+                        'responsable': responsable,
+                        'valor_hallado': valores_nuevos[detalle.id]
+                    }
+                )
+
+            total_estudios = detalles.count()
+
+            total_completados = Resultado.objects.filter(
+                solicitud_estudio__solicitud=solicitud
+            ).values(
+                'solicitud_estudio_id'
+            ).distinct().count()
+
+            if total_estudios > 0 and total_completados == total_estudios:
+                nombre_estado = 'Finalizada'
+
+            elif total_completados > 0:
+                nombre_estado = 'En análisis'
+
             else:
-                todos_cargados = False
+                nombre_estado = 'Pendiente de análisis'
 
-        if todos_cargados:
-            solicitud.estado = 'Finalizada'
-            solicitud.save()
-            messages.success(request, f'Resultados de la solicitud #{solicitud.id} guardados. Estado: Finalizada.')
-            return redirect('panel_bioquimico')
-        else:
-            messages.warning(request, 'Se guardaron los valores parciales, pero aún quedan campos pendientes.')
+            estado, _ = EstadoSolicitud.objects.get_or_create(
+                nombre=nombre_estado
+            )
 
-    return render(request, 'analisis_bioquimico/cargar_resultados.html', {
-        'solicitud': solicitud,
-        'detalles': detalles
-    })
+            solicitud.estado = estado
+            solicitud.save(update_fields=['estado'])
+
+        if nombre_estado == 'Finalizada':
+            messages.success(
+                request,
+                f'La solicitud #{solicitud.id} fue finalizada correctamente.'
+            )
+            return redirect(
+                'analisis_bioquimico:panel_bioquimico'
+            )
+
+        messages.success(
+            request,
+            f'Resultados guardados. Estado: {nombre_estado}.'
+        )
+
+        return redirect(
+            'analisis_bioquimico:cargar_resultados',
+            solicitud_id=solicitud.id
+        )
+
+    # Preparar los datos para el template.
+    detalles_resultados = []
+
+    for detalle in detalles:
+        detalles_resultados.append({
+            'id': detalle.id,
+            'estudio': detalle.estudio,
+            'resultado': resultados_existentes.get(detalle.id),
+            'rangos': RangoReferencia.objects.filter(
+                estudio=detalle.estudio
+            ).order_by('edad_min')
+        })
+
+    return render(
+        request,
+        'analisis_bioquimico/personal/cargar_resultados.html',
+        {
+            'solicitud': solicitud,
+            'detalles': detalles_resultados
+        }
+    )
