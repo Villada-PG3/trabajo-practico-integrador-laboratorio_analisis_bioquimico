@@ -29,6 +29,7 @@ from .forms import (
     RangoReferenciaForm,
 )
 
+from .services import enviar_email_finalizacion
 
 # ==========================================
 # SECCIÓN: PORTAL DE PACIENTES
@@ -1178,8 +1179,19 @@ def cargar_resultados(request, solicitud_id):
                 nombre=nombre_estado
             )
 
+            estado_anterior = solicitud.estado.nombre
+
             solicitud.estado = estado
             solicitud.save(update_fields=['estado'])
+
+            if (
+                estado_anterior != 'Finalizada'
+                and nombre_estado == 'Finalizada'
+            ):
+                transaction.on_commit(
+                    lambda solicitud_id=solicitud.id:
+                        enviar_email_finalizacion(solicitud_id)
+                )
 
         if nombre_estado == 'Finalizada':
             messages.success(
