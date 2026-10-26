@@ -4,4 +4,4 @@ __pycache__/
 db.sqlite3
 media/
 .vscode/
-.github/agents/
+.github/agents/recetas/
