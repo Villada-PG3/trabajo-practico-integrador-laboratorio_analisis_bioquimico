@@ -47,7 +47,11 @@ urlpatterns = [
         views.historial_solicitudes,
         name='portal_historial'
     ),
-
+    path(
+        'portal/solicitud/<int:solicitud_id>/resultado/',
+        views.detalle_pdf_resultados,
+        name='detalle_pdf_resultados'
+    ),
 
     # ==========================================
     # LOGIN / PANELES DE PERSONAL
