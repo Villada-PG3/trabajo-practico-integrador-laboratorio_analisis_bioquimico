@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>
+        Resultado Solicitud #{{ solicitud.id }}
+    </title>
+
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            color: #222;
+        }
+
+        .encabezado {
+            border-bottom: 3px solid #1a4d6e;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+        }
+
+        .encabezado h1 {
+            margin: 0;
+            color: #1a4d6e;
+        }
+
+        .encabezado p {
+            margin: 5px 0 0 0;
+            color: #555;
+        }
+
+        .datos {
+            margin-bottom: 25px;
+        }
+
+        .datos-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th {
+            background-color: #1a4d6e;
+            color: white;
+            padding: 10px;
+            text-align: left;
+        }
+
+        td {
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f5f5f5;
+        }
+
+        .valor {
+            font-weight: bold;
+        }
+
+        .acciones {
+            margin-bottom: 25px;
+        }
+
+        .boton {
+            display: inline-block;
+            padding: 10px 16px;
+            border: none;
+            text-decoration: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 5px;
+        }
+
+        .boton-imprimir {
+            background-color: #1a4d6e;
+            color: white;
+        }
+
+        .boton-volver {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .pie {
+            margin-top: 40px;
+            padding-top: 15px;
+            border-top: 1px solid #ccc;
+            font-size: 12px;
+            color: #777;
+            text-align: center;
+        }
+
+        @media print {
+
+            .acciones {
+                display: none;
+            }
+
+            body {
+                margin: 15px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- Acciones -->
+    <div class="acciones">
+
+        <button
+            type="button"
+            class="boton boton-imprimir"
+            onclick="window.print()"
+        >
+            Descargar PDF / Imprimir
+        </button>
+
+
+        <a
+            href="{% url 'analisis_bioquimico:portal_historial' %}?solicitud_id={{ solicitud.id }}"
+            class="boton boton-volver"
+        >
+            Volver
+        </a>
+
+    </div>
+
+
+    <!-- Encabezado -->
+    <div class="encabezado">
+
+        <h1>
+            Laboratorio SAC
+        </h1>
+
+        <p>
+            Informe de Resultados de Análisis Bioquímicos
+        </p>
+
+    </div>
+
+
+    <!-- Datos -->
+    <div class="datos">
+
+        <div class="datos-grid">
+
+            <div>
+                <strong>Solicitud:</strong>
+                #{{ solicitud.id }}
+            </div>
+
+            <div>
+                <strong>Fecha:</strong>
+                {{ solicitud.fecha_hora|date:"d/m/Y H:i" }}
+            </div>
+
+
+            <div>
+                <strong>Paciente:</strong>
+                {{ paciente.apellido|upper }}
+                {{ paciente.nombre|upper }}
+            </div>
+
+            <div>
+                <strong>DNI:</strong>
+                {{ paciente.dni }}
+            </div>
+
+
+            <div>
+
+                <strong>Médico:</strong>
+
+                {% if solicitud.receta and solicitud.receta.medico %}
+
+                    Dr/a.
+                    {{ solicitud.receta.medico.apellido }}
+                    {{ solicitud.receta.medico.nombre }}
+
+                {% else %}
+
+                    Sin médico registrado
+
+                {% endif %}
+
+            </div>
+
+
+            <div>
+
+                <strong>Estado:</strong>
+                {{ solicitud.estado.nombre }}
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Resultados -->
+
+    <h2>
+        Resultados
+    </h2>
+
+
+    <table>
+
+        <thead>
+
+            <tr>
+                <th>Estudio</th>
+                <th>Método / Técnica</th>
+                <th>Rango de referencia</th>
+                <th>Resultado</th>
+            </tr>
+
+        </thead>
+
+
+        <tbody>
+
+            {% for item in resultados_detalle %}
+
+                <tr>
+
+                    <td>
+
+                        <strong>
+                            {{ item.estudio.codigo }}
+                        </strong>
+
+                        -
+
+                        {{ item.estudio.nombre }}
+
+                    </td>
+
+
+                    <td>
+
+                        {{ item.estudio.metodo_tecnica|default:"Sin especificar" }}
+
+                    </td>
+
+
+                    <td>
+
+                        {% for rango in item.rangos %}
+
+                            {{ rango.valor_min }}
+                            -
+                            {{ rango.valor_max }}
+
+                            {{ item.estudio.unidad_medida }}
+
+                            {% if rango.genero %}
+                                - {{ rango.genero }}
+                            {% endif %}
+
+                            <br>
+
+                        {% empty %}
+
+                            Sin rango de referencia cargado
+
+                        {% endfor %}
+
+                    </td>
+
+
+                    <td class="valor">
+
+                        {% if item.resultado %}
+
+                            {{ item.resultado.valor_hallado }}
+                            {{ item.estudio.unidad_medida }}
+
+                        {% else %}
+
+                            Sin resultado
+
+                        {% endif %}
+
+                    </td>
+
+                </tr>
+
+            {% empty %}
+
+                <tr>
+
+                    <td colspan="4">
+                        No hay estudios asociados a esta solicitud.
+                    </td>
+
+                </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+
+    <div class="pie">
+
+        Laboratorio de Análisis Bioquímicos SAC
+
+        <br>
+
+        Documento generado para la solicitud
+        #{{ solicitud.id }}
+
+    </div>
+
+
+</body>
+
+</html>

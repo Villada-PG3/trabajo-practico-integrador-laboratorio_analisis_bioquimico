@@ -193,7 +193,83 @@ def historial_solicitudes(request):
         'analisis_bioquimico/portal/historial.html',
         context
     )
+def detalle_pdf_resultados(request, solicitud_id):
+    """
+    Muestra una versión imprimible de los resultados
+    de una solicitud finalizada del paciente autenticado.
+    """
 
+    paciente_id = request.session.get('paciente_id')
+
+    if not paciente_id:
+        messages.warning(
+            request,
+            'Debe ingresar con su DNI y CAP para consultar sus resultados.'
+        )
+        return redirect('analisis_bioquimico:login')
+
+    paciente = get_object_or_404(
+        Paciente,
+        id=paciente_id
+    )
+
+    solicitud = get_object_or_404(
+        SolicitudAnalisis.objects.select_related(
+            'paciente',
+            'estado',
+            'receta__medico'
+        ),
+        id=solicitud_id,
+        paciente=paciente
+    )
+
+    if solicitud.estado.nombre != 'Finalizada':
+        messages.warning(
+            request,
+            'El informe todavía no está disponible porque la solicitud no está finalizada.'
+        )
+
+        return redirect(
+            f"{request.build_absolute_uri('/portal/historial/')}?solicitud_id={solicitud.id}"
+        )
+
+    estudios_solicitud = SolicitudEstudio.objects.filter(
+        solicitud=solicitud
+    ).select_related(
+        'estudio'
+    ).order_by('id')
+
+    resultados_detalle = []
+
+    for solicitud_estudio in estudios_solicitud:
+
+        resultado = Resultado.objects.filter(
+            solicitud_estudio=solicitud_estudio
+        ).select_related(
+            'responsable'
+        ).first()
+
+        rangos = RangoReferencia.objects.filter(
+            estudio=solicitud_estudio.estudio
+        ).order_by(
+            'edad_min'
+        )
+
+        resultados_detalle.append({
+            'estudio': solicitud_estudio.estudio,
+            'resultado': resultado,
+            'rangos': rangos,
+        })
+
+    return render(
+        request,
+        'analisis_bioquimico/portal/detalle_pdf.html',
+        {
+            'paciente': paciente,
+            'solicitud': solicitud,
+            'resultados_detalle': resultados_detalle,
+        }
+    )
 
 # ==========================================
 # SECCIÓN: INSTITUCIONAL / HOME
