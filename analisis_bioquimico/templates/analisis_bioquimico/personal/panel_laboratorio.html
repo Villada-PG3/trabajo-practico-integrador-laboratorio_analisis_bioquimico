@@ -8,17 +8,31 @@
         Panel de Laboratorio
     </h2>
 
-    <a
-        href="{% url 'analisis_bioquimico:estudios_lista' %}"
-        class="btn btn-primary"
-    >
-        Gestión de Estudios
-    </a>
+    <div class="d-flex flex-wrap gap-2">
 
-    <a href="{% url 'analisis_bioquimico:panel_bioquimico' %}"
-        class="btn btn-success ms-2">
-        Cargar Resultados
-    </a>
+        <a
+            href="{% url 'analisis_bioquimico:estudios_lista' %}"
+            class="btn btn-primary"
+        >
+            Gestión de Estudios
+        </a>
+
+        <a
+            href="{% url 'analisis_bioquimico:panel_bioquimico' %}"
+            class="btn btn-success"
+        >
+            Cargar Resultados
+        </a>
+
+        <a
+            href="{% url 'analisis_bioquimico:reportes_laboratorio' %}"
+            class="btn btn-dark"
+        >
+            Reportes Estadísticos
+        </a>
+
+    </div>
+
 </div>
 
 {% endblock %}

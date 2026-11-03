@@ -1,0 +1,409 @@
+{% extends "analisis_bioquimico/base.html" %}
+
+{% block title %}
+Reportes Estadísticos - Laboratorio SAC
+{% endblock %}
+
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2 class="mb-1">
+                Reportes Estadísticos
+            </h2>
+
+            <p class="text-muted mb-0">
+                Volumen de solicitudes del laboratorio
+            </p>
+
+        </div>
+
+        <a
+            href="{% url 'analisis_bioquimico:panel_laboratorio' %}"
+            class="btn btn-outline-secondary"
+        >
+            Volver
+        </a>
+
+    </div>
+
+
+    <!-- FILTROS -->
+
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-body">
+
+            <form method="GET">
+
+                <div class="row align-items-end">
+
+                    <div class="col-md-4">
+
+                        <label
+                            for="periodo"
+                            class="form-label fw-bold"
+                        >
+                            Agrupar por
+                        </label>
+
+                        <select
+                            name="periodo"
+                            id="periodo"
+                            class="form-select"
+                        >
+
+                            <option
+                                value="dia"
+                                {% if periodo == 'dia' %}selected{% endif %}
+                            >
+                                Día
+                            </option>
+
+                            <option
+                                value="semana"
+                                {% if periodo == 'semana' %}selected{% endif %}
+                            >
+                                Semana
+                            </option>
+
+                            <option
+                                value="mes"
+                                {% if periodo == 'mes' %}selected{% endif %}
+                            >
+                                Mes
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="col-md-5">
+
+                        <label
+                            for="estudio"
+                            class="form-label fw-bold"
+                        >
+                            Estudio
+                        </label>
+
+                        <select
+                            name="estudio"
+                            id="estudio"
+                            class="form-select"
+                        >
+
+                            <option value="">
+                                Todos los estudios
+                            </option>
+
+                            {% for estudio in estudios %}
+
+                                <option
+                                    value="{{ estudio.id }}"
+                                    {% if estudio_seleccionado and estudio_seleccionado.id == estudio.id %}selected{% endif %}
+                                >
+
+                                    {{ estudio.codigo }}
+                                    -
+                                    {{ estudio.nombre }}
+
+                                </option>
+
+                            {% endfor %}
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="col-md-3 mt-3 mt-md-0">
+
+                        <button
+                            type="submit"
+                            class="btn btn-primary w-100"
+                        >
+                            Aplicar filtros
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- RESUMEN -->
+
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-body">
+
+            <h5 class="card-title">
+                Solicitudes incluidas
+            </h5>
+
+            <h2 class="fw-bold mb-0">
+                {{ total_solicitudes }}
+            </h2>
+
+            {% if estudio_seleccionado %}
+
+                <p class="text-muted mt-2 mb-0">
+
+                    Filtrado por:
+
+                    <strong>
+                        {{ estudio_seleccionado.codigo }}
+                        -
+                        {{ estudio_seleccionado.nombre }}
+                    </strong>
+
+                </p>
+
+            {% else %}
+
+                <p class="text-muted mt-2 mb-0">
+                    Todos los estudios
+                </p>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <!-- GRÁFICO POR PERÍODO -->
+
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-header">
+
+            <strong>
+                Solicitudes por
+
+                {% if periodo == 'dia' %}
+                    día
+                {% elif periodo == 'semana' %}
+                    semana
+                {% else %}
+                    mes
+                {% endif %}
+
+            </strong>
+
+        </div>
+
+
+        <div class="card-body">
+
+            {% if valores_periodo %}
+
+                <canvas
+                    id="graficoPeriodo"
+                    height="100"
+                ></canvas>
+
+            {% else %}
+
+                <div class="alert alert-info mb-0">
+
+                    No hay solicitudes para los filtros seleccionados.
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <!-- GRÁFICO POR ESTUDIO -->
+
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-header">
+
+            <strong>
+                Solicitudes por estudio
+            </strong>
+
+        </div>
+
+
+        <div class="card-body">
+
+            {% if valores_estudios %}
+
+                <canvas
+                    id="graficoEstudios"
+                    height="120"
+                ></canvas>
+
+            {% else %}
+
+                <div class="alert alert-info mb-0">
+
+                    No hay datos de estudios disponibles.
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+
+
+{{ labels_periodo|json_script:"labels-periodo" }}
+{{ valores_periodo|json_script:"valores-periodo" }}
+
+{{ labels_estudios|json_script:"labels-estudios" }}
+{{ valores_estudios|json_script:"valores-estudios" }}
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+
+    const labelsPeriodo = JSON.parse(
+        document.getElementById(
+            'labels-periodo'
+        ).textContent
+    );
+
+    const valoresPeriodo = JSON.parse(
+        document.getElementById(
+            'valores-periodo'
+        ).textContent
+    );
+
+
+    const labelsEstudios = JSON.parse(
+        document.getElementById(
+            'labels-estudios'
+        ).textContent
+    );
+
+    const valoresEstudios = JSON.parse(
+        document.getElementById(
+            'valores-estudios'
+        ).textContent
+    );
+
+
+    const canvasPeriodo =
+        document.getElementById(
+            'graficoPeriodo'
+        );
+
+    if (canvasPeriodo) {
+
+        new Chart(
+            canvasPeriodo,
+            {
+                type: 'line',
+
+                data: {
+
+                    labels: labelsPeriodo,
+
+                    datasets: [
+                        {
+                            label: 'Cantidad de solicitudes',
+                            data: valoresPeriodo,
+                            borderWidth: 2,
+                            tension: 0.2
+                        }
+                    ]
+
+                },
+
+                options: {
+
+                    responsive: true,
+
+                    scales: {
+
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+
+                    }
+
+                }
+
+            }
+        );
+
+    }
+
+
+    const canvasEstudios =
+        document.getElementById(
+            'graficoEstudios'
+        );
+
+    if (canvasEstudios) {
+
+        new Chart(
+            canvasEstudios,
+            {
+                type: 'bar',
+
+                data: {
+
+                    labels: labelsEstudios,
+
+                    datasets: [
+                        {
+                            label: 'Solicitudes',
+                            data: valoresEstudios,
+                            borderWidth: 1
+                        }
+                    ]
+
+                },
+
+                options: {
+
+                    responsive: true,
+
+                    scales: {
+
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+
+                    }
+
+                }
+
+            }
+        );
+
+    }
+
+</script>
+
+{% endblock %}
