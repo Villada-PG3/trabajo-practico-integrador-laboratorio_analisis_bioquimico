@@ -4,6 +4,8 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.core.mail import send_mail
 from django.db import transaction
+from django.db.models import Count
+from django.db.models.functions import TruncDay, TruncWeek, TruncMonth
 from django.views.decorators.http import require_http_methods
 from decimal import Decimal, InvalidOperation
 
@@ -496,7 +498,205 @@ def panel_laboratorio(request):
         'analisis_bioquimico/personal/panel_laboratorio.html'
     )
 
+def reportes_laboratorio(request):
+    """
+    Reportes estadísticos del laboratorio.
 
+    Permite agrupar la cantidad de solicitudes por:
+    - día
+    - semana
+    - mes
+
+    También permite filtrar por estudio.
+    """
+
+    if not request.user.is_authenticated:
+        return redirect(
+            'analisis_bioquimico:login'
+        )
+
+    if not hasattr(request.user, 'responsable_analisis'):
+        messages.error(
+            request,
+            'No tiene permisos para acceder a los reportes.'
+        )
+
+        return redirect(
+            'analisis_bioquimico:login'
+        )
+
+    # ==========================================
+    # FILTROS
+    # ==========================================
+
+    periodo = request.GET.get(
+        'periodo',
+        'mes'
+    )
+
+    estudio_id = request.GET.get(
+        'estudio',
+        ''
+    )
+
+    if periodo not in [
+        'dia',
+        'semana',
+        'mes'
+    ]:
+        periodo = 'mes'
+
+    solicitudes = SolicitudAnalisis.objects.all()
+
+    estudio_seleccionado = None
+
+    if estudio_id and estudio_id.isdigit():
+
+        estudio_seleccionado = Estudio.objects.filter(
+            id=int(estudio_id)
+        ).first()
+
+        if estudio_seleccionado:
+
+            solicitudes = solicitudes.filter(
+                solicitudestudio__estudio=estudio_seleccionado
+            ).distinct()
+
+    # ==========================================
+    # AGRUPACIÓN POR PERÍODO
+    # ==========================================
+
+    if periodo == 'dia':
+
+        funcion_periodo = TruncDay(
+            'fecha_hora'
+        )
+
+    elif periodo == 'semana':
+
+        funcion_periodo = TruncWeek(
+            'fecha_hora'
+        )
+
+    else:
+
+        funcion_periodo = TruncMonth(
+            'fecha_hora'
+        )
+
+    datos_periodo = (
+        solicitudes
+        .annotate(
+            periodo_agrupado=funcion_periodo
+        )
+        .values(
+            'periodo_agrupado'
+        )
+        .annotate(
+            total=Count(
+                'id',
+                distinct=True
+            )
+        )
+        .order_by(
+            'periodo_agrupado'
+        )
+    )
+
+    labels_periodo = []
+    valores_periodo = []
+
+    for dato in datos_periodo:
+
+        fecha = dato['periodo_agrupado']
+
+        if periodo == 'dia':
+
+            etiqueta = fecha.strftime(
+                '%d/%m/%Y'
+            )
+
+        elif periodo == 'semana':
+
+            etiqueta = (
+                'Semana del '
+                + fecha.strftime(
+                    '%d/%m/%Y'
+                )
+            )
+
+        else:
+
+            etiqueta = fecha.strftime(
+                '%m/%Y'
+            )
+
+        labels_periodo.append(
+            etiqueta
+        )
+
+        valores_periodo.append(
+            dato['total']
+        )
+
+    # ==========================================
+    # SOLICITUDES POR ESTUDIO
+    # ==========================================
+
+    solicitudes_por_estudio = (
+        SolicitudEstudio.objects
+        .values(
+            'estudio__nombre'
+        )
+        .annotate(
+            total=Count(
+                'solicitud_id',
+                distinct=True
+            )
+        )
+        .order_by(
+            '-total',
+            'estudio__nombre'
+        )
+    )
+
+    labels_estudios = []
+    valores_estudios = []
+
+    for dato in solicitudes_por_estudio:
+
+        labels_estudios.append(
+            dato['estudio__nombre']
+        )
+
+        valores_estudios.append(
+            dato['total']
+        )
+
+    # ==========================================
+    # ESTUDIOS PARA EL SELECT
+    # ==========================================
+
+    estudios = Estudio.objects.all().order_by(
+        'nombre'
+    )
+
+    context = {
+        'periodo': periodo,
+        'estudios': estudios,
+        'estudio_seleccionado': estudio_seleccionado,
+        'labels_periodo': labels_periodo,
+        'valores_periodo': valores_periodo,
+        'labels_estudios': labels_estudios,
+        'valores_estudios': valores_estudios,
+        'total_solicitudes': solicitudes.count(),
+    }
+
+    return render(
+        request,
+        'analisis_bioquimico/personal/reportes.html',
+        context
+    )
 # ==========================================
 # SECCIÓN: MÓDULO 1 - RECEPCIÓN DE RECETA
 # ==========================================

@@ -22,8 +22,6 @@ urlpatterns = [
     # ACCESO / PORTAL DEL PACIENTE
     # ==========================================
 
-    # Login unificado:
-    # Paciente + Personal
     path(
         'recepcion/pacientes/',
         views.login_paciente,
@@ -47,19 +45,18 @@ urlpatterns = [
         views.historial_solicitudes,
         name='portal_historial'
     ),
+
     path(
         'portal/solicitud/<int:solicitud_id>/resultado/',
         views.detalle_pdf_resultados,
         name='detalle_pdf_resultados'
     ),
 
+
     # ==========================================
     # LOGIN / PANELES DE PERSONAL
     # ==========================================
 
-    # Esta URL procesa el formulario del personal.
-    # Si se abre manualmente por GET,
-    # vuelve al login unificado.
     path(
         'personal/login/',
         views.login_personal,
@@ -83,20 +80,29 @@ urlpatterns = [
         views.panel_extraccion,
         name='panel_extraccion'
     ),
+
     path(
         'personal/extraccion/<int:solicitud_id>/registrar/',
         views.registrar_extraccion,
         name='registrar_extraccion'
     ),
+
     path(
-    'personal/extraccion/comprobante/<int:comprobante_id>/',
-    views.comprobante_extraccion,
-    name='comprobante_extraccion'
+        'personal/extraccion/comprobante/<int:comprobante_id>/',
+        views.comprobante_extraccion,
+        name='comprobante_extraccion'
     ),
+
     path(
         'personal/laboratorio/',
         views.panel_laboratorio,
         name='panel_laboratorio'
+    ),
+
+    path(
+        'personal/laboratorio/reportes/',
+        views.reportes_laboratorio,
+        name='reportes_laboratorio'
     ),
 
 
@@ -150,6 +156,21 @@ urlpatterns = [
         views.rango_eliminar,
         name='rango_eliminar'
     ),
-    path('panel-bioquimico/', views.panel_bioquimico, name='panel_bioquimico'),
-    path('cargar-resultados/<int:solicitud_id>/', views.cargar_resultados, name='cargar_resultados'),
+
+
+    # ==========================================
+    # RESPONSABLE DE ANÁLISIS
+    # ==========================================
+
+    path(
+        'panel-bioquimico/',
+        views.panel_bioquimico,
+        name='panel_bioquimico'
+    ),
+
+    path(
+        'cargar-resultados/<int:solicitud_id>/',
+        views.cargar_resultados,
+        name='cargar_resultados'
+    ),
 ]
