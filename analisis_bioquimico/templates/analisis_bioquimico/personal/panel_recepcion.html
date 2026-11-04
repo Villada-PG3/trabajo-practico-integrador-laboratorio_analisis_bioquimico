@@ -4,16 +4,32 @@
 
 <div class="container mt-5">
 
-    <h2>
+    <h2 class="mb-4">
         Panel de Recepción
     </h2>
 
-    <a
-        href="{% url 'analisis_bioquimico:recepcion_crear_solicitud' %}"
-        class="btn btn-primary mt-3"
-    >
-        Nueva Solicitud
-    </a>
+    <div class="d-flex flex-wrap gap-2">
+
+        <a
+            href="{% url 'analisis_bioquimico:gestion_pacientes' %}"
+            class="btn btn-primary"
+        >
+            Gestión de Pacientes
+        </a>
+        <a
+            href="{% url 'analisis_bioquimico:gestion_medicos' %}"
+            class="btn btn-outline-primary"
+        >
+            Gestión de Médicos
+        </a>
+        <a
+            href="{% url 'analisis_bioquimico:recepcion_crear_solicitud' %}"
+            class="btn btn-success"
+        >
+            Nueva Solicitud
+        </a>
+
+    </div>
 
 </div>
 

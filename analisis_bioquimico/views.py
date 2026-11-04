@@ -6,8 +6,9 @@ from django.core.mail import send_mail
 from django.db import transaction
 from django.db.models import Count
 from django.db.models.functions import TruncDay, TruncWeek, TruncMonth
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_http_methods, require_GET
 from decimal import Decimal, InvalidOperation
+from django.http import JsonResponse
 
 from .models import (
     Paciente,
@@ -23,12 +24,14 @@ from .models import (
     Comprobante,
     Muestra,
     Extraccionista,
+    MatriculaColegioSimulado,
 )
 
 from .forms import (
     CrearSolicitudForm,
     EstudioForm,
     RangoReferenciaForm,
+    PacienteForm,
 )
 
 from .services import enviar_email_finalizacion
@@ -700,7 +703,91 @@ def reportes_laboratorio(request):
 # ==========================================
 # SECCIÓN: MÓDULO 1 - RECEPCIÓN DE RECETA
 # ==========================================
+def gestion_pacientes(request):
+    """
+    Gestión de pacientes desde Recepción.
 
+    - Buscar por DNI.
+    - Registrar si no existe.
+    - Actualizar datos de contacto si existe.
+    """
+
+    if not request.user.is_authenticated:
+        return redirect('analisis_bioquimico:login')
+
+    if not hasattr(request.user, 'recepcionista'):
+        messages.error(
+            request,
+            'No tiene permisos para gestionar pacientes.'
+        )
+        return redirect('analisis_bioquimico:login')
+
+    dni_busqueda = ''
+
+    paciente = None
+    form = None
+
+    if request.method == 'POST':
+
+        dni_busqueda = request.POST.get(
+            'dni_busqueda', ''
+        ).strip()
+
+        paciente = Paciente.objects.filter(
+            dni=dni_busqueda
+        ).first()
+
+        form = PacienteForm(
+            request.POST,
+            instance=paciente
+        )
+
+        if form.is_valid():
+
+            paciente_guardado = form.save()
+
+            if paciente:
+                messages.success(
+                    request,
+                    'Los datos de contacto del paciente '
+                    'se actualizaron correctamente.'
+                )
+            else:
+                messages.success(
+                    request,
+                    'El paciente fue registrado correctamente.'
+                )
+
+            return redirect(
+                'analisis_bioquimico:gestion_pacientes'
+            )
+
+    else:
+
+        dni_busqueda = request.GET.get(
+            'dni', ''
+        ).strip()
+
+        if dni_busqueda:
+
+            paciente = Paciente.objects.filter(
+                dni=dni_busqueda
+            ).first()
+
+            form = PacienteForm(
+                instance=paciente,
+                initial={'dni': dni_busqueda}
+            )
+
+    return render(
+        request,
+        'analisis_bioquimico/recepcion/gestion_paciente.html',
+        {
+            'dni_busqueda': dni_busqueda,
+            'paciente': paciente,
+            'form': form,
+        }
+    )
 def recepcion_crear_solicitud(request):
     """
     Formulario para recepción de receta y creación
@@ -708,7 +795,15 @@ def recepcion_crear_solicitud(request):
     """
 
     initial_data = {}
+    if not request.user.is_authenticated:
+        return redirect('analisis_bioquimico:login')
 
+    if not hasattr(request.user, 'recepcionista'):
+        messages.error(
+            request,
+            'No tiene permisos para registrar solicitudes.'
+        )
+        return redirect('analisis_bioquimico:login')
     if 'paciente_id' in request.GET:
         initial_data['paciente'] = request.GET.get(
             'paciente_id'
@@ -777,21 +872,7 @@ def recepcion_crear_solicitud(request):
             # 3. Recepcionista
             # --------------------------
 
-            recepcionista = (
-                Recepcionista.objects.first()
-            )
-
-            if not recepcionista:
-
-                recepcionista = (
-                    Recepcionista.objects.create(
-                        nombre='Mesa de',
-                        apellido='Entrada',
-                        email=(
-                            'recepcion@laboratoriosac.com.ar'
-                        )
-                    )
-                )
+            recepcionista = request.user.recepcionista
 
             # --------------------------
             # 4. Solicitud
@@ -1508,4 +1589,157 @@ def cargar_resultados(request, solicitud_id):
             'solicitud': solicitud,
             'detalles': detalles_resultados
         }
+    )
+# ==========================================
+# COLEGIO MÉDICO - WEBSERVICE SIMULADO
+# ==========================================
+
+def consultar_matricula_simulada(matricula):
+    """
+    Consulta el registro simulado del Colegio Médico.
+
+    La información se obtiene de la base de datos,
+    no de un listado escrito en el código.
+    """
+
+    matricula = matricula.strip()
+
+    if not matricula:
+        return {
+            'encontrada': False,
+            'habilitada': False,
+            'mensaje': 'Debe ingresar una matrícula.',
+        }
+
+    registro = MatriculaColegioSimulado.objects.filter(
+        matricula=matricula
+    ).first()
+
+    if registro is None:
+        return {
+            'encontrada': False,
+            'habilitada': False,
+            'mensaje': 'La matrícula no existe en el registro simulado.',
+        }
+
+    return {
+        'encontrada': True,
+        'habilitada': registro.habilitada,
+        'matricula': registro.matricula,
+        'nombre': registro.nombre,
+        'apellido': registro.apellido,
+        'email': registro.email or '',
+        'especialidad': registro.especialidad,
+        'mensaje': (
+            'Matrícula habilitada.'
+            if registro.habilitada
+            else 'La matrícula no está habilitada.'
+        ),
+    }
+
+
+@require_GET
+def api_validar_matricula(request):
+    """
+    API JSON simulada del Colegio Médico.
+
+    Solo los recepcionistas autenticados
+    pueden realizar consultas.
+    """
+
+    if (
+        not request.user.is_authenticated
+        or not hasattr(request.user, 'recepcionista')
+    ):
+        return JsonResponse(
+            {'error': 'No tiene permisos para consultar matrículas.'},
+            status=403
+        )
+
+    matricula = request.GET.get('matricula', '').strip()
+
+    if not matricula:
+        return JsonResponse(
+            {'error': 'Debe ingresar una matrícula.'},
+            status=400
+        )
+
+    resultado = consultar_matricula_simulada(matricula)
+
+    return JsonResponse(resultado)
+
+
+# ==========================================
+# RECEPCIÓN - GESTIÓN DE MÉDICOS
+# ==========================================
+
+def gestion_medicos(request):
+    """
+    Consulta una matrícula en el servicio simulado
+    y registra al médico cuando está habilitada.
+    """
+
+    if not request.user.is_authenticated:
+        return redirect('analisis_bioquimico:login')
+
+    if not hasattr(request.user, 'recepcionista'):
+        messages.error(
+            request,
+            'No tiene permisos para gestionar médicos.'
+        )
+        return redirect('analisis_bioquimico:login')
+
+    if request.method == 'POST':
+
+        matricula = request.POST.get(
+            'matricula', ''
+        ).strip()
+
+        resultado = consultar_matricula_simulada(matricula)
+
+        # La consulta se repite en el servidor.
+        # No confiamos solamente en la respuesta
+        # obtenida previamente por JavaScript.
+
+        if not resultado.get('habilitada'):
+
+            messages.error(
+                request,
+                resultado['mensaje']
+            )
+
+            return redirect(
+                'analisis_bioquimico:gestion_medicos'
+            )
+
+        medico, creado = Medico.objects.update_or_create(
+            matricula=resultado['matricula'],
+            defaults={
+                'nombre': resultado['nombre'],
+                'apellido': resultado['apellido'],
+                'email': resultado['email'],
+                'especialidad': resultado['especialidad'],
+                'validado_colegio': True,
+            }
+        )
+
+        if creado:
+            messages.success(
+                request,
+                'El médico fue registrado correctamente.'
+            )
+        else:
+            messages.success(
+                request,
+                'El médico ya existía. Sus datos fueron '
+                'actualizados según el registro simulado.'
+            )
+
+        return redirect(
+            'analisis_bioquimico:recepcion_crear_solicitud'
+        )
+
+    return render(
+        request,
+        'analisis_bioquimico/recepcion/gestion_medicos.html'
     )

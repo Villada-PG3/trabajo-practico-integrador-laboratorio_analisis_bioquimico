@@ -183,3 +183,15 @@ class Notificacion(models.Model):
 
     def __str__(self):
         return f"Notificación {self.tipo} - Solicitud #{self.solicitud.id}"
+    
+class MatriculaColegioSimulado(models.Model):
+    matricula = models.CharField(max_length=50, unique=True)
+    nombre = models.CharField(max_length=100)
+    apellido = models.CharField(max_length=100)
+    email = models.EmailField(blank=True, null=True)
+    especialidad = models.CharField(max_length=100)
+    habilitada = models.BooleanField(default=True)
+
+    def __str__(self):
+        estado = "Habilitada" if self.habilitada else "No habilitada"
+        return f"{self.matricula} - {self.apellido}, {self.nombre} ({estado})"

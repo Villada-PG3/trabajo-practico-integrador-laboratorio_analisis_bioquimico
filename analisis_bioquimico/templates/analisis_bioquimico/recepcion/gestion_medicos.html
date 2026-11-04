@@ -1,0 +1,212 @@
+
+{% extends 'analisis_bioquimico/base.html' %}
+
+{% block content %}
+<div class="container py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-primary">
+            <i class="bi bi-person-badge me-2"></i>
+            Gestión de Médicos
+        </h2>
+
+        <a href="{% url 'analisis_bioquimico:panel_recepcion' %}"
+           class="btn btn-outline-secondary">
+            Volver a Recepción
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+
+            <h5 class="fw-bold mb-3">
+                Validar Matrícula Profesional
+            </h5>
+
+            <p class="text-muted">
+                Ingrese la matrícula para consultar el
+                servicio simulado del Colegio Médico.
+            </p>
+
+            <div class="row g-2">
+
+                <div class="col-md-9">
+                    <input
+                        type="text"
+                        id="matricula"
+                        class="form-control form-control-lg"
+                        placeholder="Número de matrícula profesional"
+                        maxlength="50"
+                    >
+                </div>
+
+                <div class="col-md-3">
+                    <button
+                        type="button"
+                        id="btn-consultar"
+                        class="btn btn-primary btn-lg w-100"
+                    >
+                        Consultar MP
+                    </button>
+                </div>
+
+            </div>
+
+            <div id="respuesta-consulta"
+                 class="mt-4"
+                 aria-live="polite"></div>
+
+        </div>
+    </div>
+
+    <div id="datos-medico" class="card border-0 shadow-sm d-none">
+
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0 text-success">
+                <i class="bi bi-check-circle me-1"></i>
+                Médico Habilitado
+            </h5>
+        </div>
+
+        <div class="card-body p-4">
+
+            <p><strong>Nombre:</strong> <span id="dato-nombre"></span></p>
+            <p><strong>Apellido:</strong> <span id="dato-apellido"></span></p>
+            <p><strong>Matrícula:</strong> <span id="dato-matricula"></span></p>
+            <p><strong>Especialidad:</strong> <span id="dato-especialidad"></span></p>
+            <p><strong>Correo:</strong> <span id="dato-email"></span></p>
+
+            <form method="post">
+                {% csrf_token %}
+
+                <input
+                    type="hidden"
+                    name="matricula"
+                    id="matricula-confirmada"
+                >
+
+                <button type="submit" class="btn btn-success mt-3">
+                    Registrar / Actualizar Médico
+                </button>
+            </form>
+
+            <p class="small text-muted mt-3 mb-0">
+                El sistema verificará nuevamente la matrícula
+                antes de guardar el médico.
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const campoMatricula = document.getElementById('matricula');
+    const boton = document.getElementById('btn-consultar');
+    const respuesta = document.getElementById('respuesta-consulta');
+    const datosMedico = document.getElementById('datos-medico');
+    const matriculaConfirmada = document.getElementById('matricula-confirmada');
+
+    const urlApi = "{% url 'analisis_bioquimico:api_validar_matricula' %}";
+
+    function mostrarMensaje(mensaje, tipo) {
+        respuesta.textContent = mensaje;
+        respuesta.className = 'alert alert-' + tipo + ' mt-4';
+    }
+
+    function limpiarResultado() {
+        datosMedico.classList.add('d-none');
+        matriculaConfirmada.value = '';
+        respuesta.textContent = '';
+        respuesta.className = 'mt-4';
+    }
+
+    campoMatricula.addEventListener('input', limpiarResultado);
+
+    boton.addEventListener('click', async function () {
+
+        const matricula = campoMatricula.value.trim();
+
+        limpiarResultado();
+
+        if (!matricula) {
+            mostrarMensaje('Debe ingresar una matrícula.', 'warning');
+            return;
+        }
+
+        boton.disabled = true;
+        boton.textContent = 'Consultando...';
+
+        try {
+
+            const respuestaHttp = await fetch(
+                urlApi + '?matricula=' + encodeURIComponent(matricula)
+            );
+
+            const resultado = await respuestaHttp.json();
+
+            // Si el usuario cambió la matrícula
+            // mientras se consultaba, ignoramos
+            // la respuesta anterior.
+            if (campoMatricula.value.trim() !== matricula) {
+                return;
+            }
+
+            if (!respuestaHttp.ok) {
+                mostrarMensaje(
+                    resultado.error || 'No se pudo realizar la consulta.',
+                    'danger'
+                );
+                return;
+            }
+
+            if (!resultado.habilitada) {
+                mostrarMensaje(resultado.mensaje, 'danger');
+                return;
+            }
+
+            mostrarMensaje(
+                'Matrícula habilitada. Puede registrar al médico.',
+                'success'
+            );
+
+            document.getElementById('dato-nombre').textContent =
+                resultado.nombre;
+
+            document.getElementById('dato-apellido').textContent =
+                resultado.apellido;
+
+            document.getElementById('dato-matricula').textContent =
+                resultado.matricula;
+
+            document.getElementById('dato-especialidad').textContent =
+                resultado.especialidad;
+
+            document.getElementById('dato-email').textContent =
+                resultado.email || 'No informado';
+
+            matriculaConfirmada.value = resultado.matricula;
+
+            datosMedico.classList.remove('d-none');
+
+        } catch (error) {
+
+            mostrarMensaje(
+                'Ocurrió un error al consultar el servicio simulado.',
+                'danger'
+            );
+
+        } finally {
+
+            boton.disabled = false;
+            boton.textContent = 'Consultar MP';
+
+        }
+    });
+
+});
+</script>
+{% endblock %}
