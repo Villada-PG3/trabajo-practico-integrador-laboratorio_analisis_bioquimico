@@ -115,7 +115,11 @@ urlpatterns = [
         views.recepcion_crear_solicitud,
         name='recepcion_crear_solicitud'
     ),
-
+    path(
+        'recepcion/pacientes/gestion/',
+        views.gestion_pacientes,
+        name='gestion_pacientes'
+    ),
 
     # ==========================================
     # MÓDULO 2 - GESTIÓN DE ESTUDIOS
@@ -172,5 +176,16 @@ urlpatterns = [
         'cargar-resultados/<int:solicitud_id>/',
         views.cargar_resultados,
         name='cargar_resultados'
+    ),
+    path(
+        'recepcion/medicos/',
+        views.gestion_medicos,
+        name='gestion_medicos'
+    ),
+
+    path(
+        'colegio-medico/api/validar/',
+        views.api_validar_matricula,
+        name='api_validar_matricula'
     ),
 ]

@@ -142,3 +142,48 @@ class RangoReferenciaForm(forms.ModelForm):
             )
 
         return cleaned_data
+class PacienteForm(forms.ModelForm):
+
+    class Meta:
+        model = Paciente
+
+        fields = [
+            'dni',
+            'nombre',
+            'apellido',
+            'email',
+            'telefono',
+            'domicilio',
+        ]
+
+        widgets = {
+            'dni': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'DNI sin puntos',
+            }),
+            'nombre': forms.TextInput(attrs={
+                'class': 'form-control',
+            }),
+            'apellido': forms.TextInput(attrs={
+                'class': 'form-control',
+            }),
+            'email': forms.EmailInput(attrs={
+                'class': 'form-control',
+            }),
+            'telefono': forms.TextInput(attrs={
+                'class': 'form-control',
+            }),
+            'domicilio': forms.TextInput(attrs={
+                'class': 'form-control',
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if self.instance.pk:
+            # Un paciente existente solo puede
+            # actualizar sus datos de contacto.
+            self.fields['dni'].disabled = True
+            self.fields['nombre'].disabled = True
+            self.fields['apellido'].disabled = True

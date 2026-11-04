@@ -1,88 +1,194 @@
+
 {% extends 'analisis_bioquimico/base.html' %}
 
 {% block content %}
+
 <div class="container py-4">
-    <div class="d-flex align-items-center justify-content-between mb-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="fw-bold text-primary m-0">
-            <i class="bi bi-person-vcard me-2"></i>Recepción - Gestión de Pacientes
+            <i class="bi bi-person-vcard me-2"></i>
+            Gestión de Pacientes
         </h2>
+
+        <a href="{% url 'analisis_bioquimico:panel_recepcion' %}"
+           class="btn btn-outline-secondary">
+            Volver
+        </a>
     </div>
 
-    <!-- Buscador de Paciente por DNI -->
+    <!-- BÚSQUEDA -->
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body p-4">
-            <h5 class="fw-bold text-dark mb-3">Buscar Paciente por DNI</h5>
+
+            <h5 class="fw-bold mb-3">
+                Buscar Paciente por DNI
+            </h5>
+
             <form method="GET" class="row g-2">
+
                 <div class="col-md-9">
-                    <input type="text" name="dni" class="form-control form-control-lg" 
-                           placeholder="Ingrese el DNI del paciente a buscar..." 
-                           value="{{ dni_busqueda }}" required>
+                    <input
+                        type="text"
+                        name="dni"
+                        class="form-control form-control-lg"
+                        placeholder="Ingrese el DNI sin puntos"
+                        value="{{ dni_busqueda }}"
+                        maxlength="15"
+                        required
+                    >
                 </div>
+
                 <div class="col-md-3">
-                    <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold">
-                        <i class="bi bi-search me-1"></i> Buscar
+                    <button type="submit"
+                            class="btn btn-primary btn-lg w-100">
+                        <i class="bi bi-search me-1"></i>
+                        Buscar
                     </button>
                 </div>
+
             </form>
         </div>
     </div>
 
-    <!-- Formulario de Alta / Edición -->
-    {% if dni_busqueda %}
+    <!-- ALTA / EDICIÓN -->
+    {% if dni_busqueda and form %}
+
     <div class="card border-0 shadow-sm">
+
         <div class="card-header bg-white py-3">
-            <h5 class="fw-bold m-0 text-secondary">
-                {% if paciente %}
-                    <i class="bi bi-pencil-square text-warning me-1"></i> Editar Datos del Paciente
-                {% else %}
-                    <i class="bi bi-person-plus-fill text-success me-1"></i> Registrar Nuevo Paciente
-                {% endif %}
-            </h5>
+
+            {% if paciente %}
+                <h5 class="mb-0 text-warning">
+                    <i class="bi bi-pencil-square me-1"></i>
+                    Editar Datos de Contacto
+                </h5>
+                <small class="text-muted">
+                    Paciente encontrado. Los datos de identidad
+                    no se pueden modificar desde esta pantalla.
+                </small>
+            {% else %}
+                <h5 class="mb-0 text-success">
+                    <i class="bi bi-person-plus-fill me-1"></i>
+                    Registrar Nuevo Paciente
+                </h5>
+            {% endif %}
+
         </div>
+
         <div class="card-body p-4">
+
             <form method="POST">
                 {% csrf_token %}
+                <input
+                    type="hidden"
+                    name="dni_busqueda"
+                    value="{{ dni_busqueda }}"
+                >
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
                 <div class="row g-3">
+
                     <div class="col-md-4">
-                        <label class="form-label fw-bold">DNI <span class="text-danger">*</span></label>
-                        <input type="text" name="dni" class="form-control" 
-                               value="{% if paciente %}{{ paciente.dni }}{% else %}{{ dni_busqueda }}{% endif %}" 
-                               readonly required>
+                        <label class="form-label fw-bold">
+                            DNI
+                        </label>
+                        {{ form.dni }}
+                        <div class="text-danger small">
+                            {{ form.dni.errors }}
+                        </div>
                     </div>
+
                     <div class="col-md-4">
-                        <label class="form-label fw-bold">Nombre <span class="text-danger">*</span></label>
-                        <input type="text" name="nombre" class="form-control" 
-                               value="{{ paciente.nombre|default:'' }}" required>
+                        <label class="form-label fw-bold">
+                            Nombre
+                        </label>
+                        {{ form.nombre }}
+                        <div class="text-danger small">
+                            {{ form.nombre.errors }}
+                        </div>
                     </div>
+
                     <div class="col-md-4">
-                        <label class="form-label fw-bold">Apellido <span class="text-danger">*</span></label>
-                        <input type="text" name="apellido" class="form-control" 
-                               value="{{ paciente.apellido|default:'' }}" required>
+                        <label class="form-label fw-bold">
+                            Apellido
+                        </label>
+                        {{ form.apellido }}
+                        <div class="text-danger small">
+                            {{ form.apellido.errors }}
+                        </div>
                     </div>
+
                     <div class="col-md-6">
-                        <label class="form-label fw-bold">Correo Electrónico <span class="text-danger">*</span></label>
-                        <input type="email" name="email" class="form-control" 
-                               value="{{ paciente.email|default:'' }}" required>
+                        <label class="form-label fw-bold">
+                            Correo Electrónico
+                        </label>
+                        {{ form.email }}
+                        <div class="text-danger small">
+                            {{ form.email.errors }}
+                        </div>
                     </div>
+
                     <div class="col-md-6">
-                        <label class="form-label fw-bold">Teléfono / Celular</label>
-                        <input type="text" name="telefono" class="form-control" 
-                               value="{{ paciente.telefono|default:'' }}">
+                        <label class="form-label fw-bold">
+                            Teléfono
+                        </label>
+                        {{ form.telefono }}
+                        <div class="text-danger small">
+                            {{ form.telefono.errors }}
+                        </div>
                     </div>
+
+                    <div class="col-12">
+                        <label class="form-label fw-bold">
+                            Domicilio
+                        </label>
+                        {{ form.domicilio }}
+                        <div class="text-danger small">
+                            {{ form.domicilio.errors }}
+                        </div>
+                    </div>
+
                 </div>
 
-                <div class="mt-4 text-end">
-                    <button type="submit" class="btn {% if paciente %}btn-warning text-dark{% else %}btn-success{% endif %} btn-lg px-4 fw-bold">
+                <div class="mt-4 d-flex justify-content-between">
+
+                    {% if paciente %}
+                        <a
+                            href="{% url 'analisis_bioquimico:recepcion_crear_solicitud' %}?paciente_id={{ paciente.id }}"
+                            class="btn btn-outline-primary"
+                        >
+                            Crear Solicitud para este Paciente
+                        </a>
+                    {% else %}
+                        <span></span>
+                    {% endif %}
+
+                    <button type="submit"
+                            class="btn {% if paciente %}btn-warning{% else %}btn-success{% endif %}">
+
                         {% if paciente %}
-                            <i class="bi bi-save me-1"></i> Guardar Cambios
+                            Guardar Cambios
                         {% else %}
-                            <i class="bi bi-check-circle me-1"></i> Registrar Paciente
+                            Registrar Paciente
                         {% endif %}
+
                     </button>
+
                 </div>
+
             </form>
+
         </div>
+
     </div>
+
     {% endif %}
+
 </div>
+
 {% endblock %}

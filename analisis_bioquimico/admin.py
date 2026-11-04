@@ -15,6 +15,7 @@ from .models import (
     Resultado,
     Comprobante,
     Notificacion,
+    MatriculaColegioSimulado,
 )
 
 
@@ -98,3 +99,20 @@ admin.site.register(Resultado,ResultadoAdmin)
 admin.site.register(Comprobante,ComprobanteAdmin)
 admin.site.register(Notificacion,NotificacionAdmin)
 
+@admin.register(MatriculaColegioSimulado)
+class MatriculaColegioSimuladoAdmin(admin.ModelAdmin):
+    list_display = (
+        'matricula',
+        'apellido',
+        'nombre',
+        'especialidad',
+        'habilitada',
+    )
+
+    search_fields = (
+        'matricula',
+        'apellido',
+        'nombre',
+    )
+
+    list_filter = ('habilitada', 'especialidad')
