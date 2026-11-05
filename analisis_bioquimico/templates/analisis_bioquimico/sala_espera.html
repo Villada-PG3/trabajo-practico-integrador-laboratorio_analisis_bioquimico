@@ -1,0 +1,189 @@
+
+{% extends "analisis_bioquimico/base.html" %}
+
+{% block content %}
+
+<div class="container py-5 text-center" style="max-width: 1100px;">
+
+    <p class="text-primary fw-bold text-uppercase fs-5 mb-2">
+        Laboratorio AC
+    </p>
+
+    <h1 class="display-4 fw-bold mb-4">
+        Sala de Espera
+    </h1>
+
+    <p class="lead text-muted mb-5">
+        Pacientes llamados a extracción
+    </p>
+
+    <div class="card border-0 shadow-lg mb-4">
+
+        <div class="card-body p-4 p-md-5">
+
+            <div id="principal" aria-live="polite">
+                <h2 class="text-muted">
+                    Esperando llamados...
+                </h2>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div id="otros" class="row g-3"></div>
+
+    <p
+        id="estado-conexion"
+        class="text-muted small mt-4"
+        aria-live="polite"
+    ></p>
+
+</div>
+
+<script>
+
+(function () {
+
+    const url = "{% url 'analisis_bioquimico:sala_espera_datos' %}";
+
+    const principal = document.getElementById('principal');
+    const otros = document.getElementById('otros');
+    const conexion = document.getElementById('estado-conexion');
+
+    function crearElemento(etiqueta, clase, texto) {
+
+        const elemento = document.createElement(etiqueta);
+
+        elemento.className = clase;
+        elemento.textContent = texto;
+
+        return elemento;
+    }
+
+    async function actualizarSala() {
+
+        try {
+
+            const respuesta = await fetch(
+                url,
+                { cache: 'no-store' }
+            );
+
+            if (!respuesta.ok) {
+                throw new Error('Error al consultar los llamados');
+            }
+
+            const datos = await respuesta.json();
+
+            const llamados = datos.llamados || [];
+
+            principal.replaceChildren();
+            otros.replaceChildren();
+
+            if (llamados.length === 0) {
+
+                principal.appendChild(
+                    crearElemento(
+                        'h2',
+                        'text-muted mb-0',
+                        'Esperando llamados...'
+                    )
+                );
+
+            } else {
+
+                const ultimoLlamado = llamados[0];
+
+                principal.appendChild(
+                    crearElemento(
+                        'p',
+                        'text-primary fw-bold fs-3',
+                        'Solicitud #' + ultimoLlamado.solicitud
+                    )
+                );
+
+                principal.appendChild(
+                    crearElemento(
+                        'h2',
+                        'display-5 fw-bold',
+                        ultimoLlamado.paciente
+                    )
+                );
+
+                principal.appendChild(
+                    crearElemento(
+                        'p',
+                        'fs-4 text-success mb-0',
+                        'Diríjase a extracción'
+                    )
+                );
+
+                if (llamados.length > 1) {
+
+                    otros.appendChild(
+                        crearElemento(
+                            'h3',
+                            'h5 text-start mb-2',
+                            'Otros pacientes llamados'
+                        )
+                    );
+
+                    llamados.slice(1).forEach(function (llamado) {
+
+                        const columna = crearElemento(
+                            'div',
+                            'col-md-6',
+                            ''
+                        );
+
+                        const tarjeta = crearElemento(
+                            'div',
+                            'border rounded p-3 bg-light',
+                            ''
+                        );
+
+                        tarjeta.appendChild(
+                            crearElemento(
+                                'strong',
+                                'd-block',
+                                'Solicitud #' + llamado.solicitud
+                            )
+                        );
+
+                        tarjeta.appendChild(
+                            crearElemento(
+                                'span',
+                                '',
+                                llamado.paciente
+                            )
+                        );
+
+                        columna.appendChild(tarjeta);
+
+                        otros.appendChild(columna);
+
+                    });
+                }
+            }
+
+            conexion.textContent =
+                'Actualización automática cada 5 segundos';
+
+        } catch (error) {
+
+            conexion.textContent =
+                'Sin conexión. Reintentando...';
+
+        }
+    }
+
+    actualizarSala();
+
+    setInterval(actualizarSala, 5000);
+
+})();
+
+</script>
+
+{% endblock %}

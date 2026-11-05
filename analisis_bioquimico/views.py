@@ -6,9 +6,10 @@ from django.core.mail import send_mail
 from django.db import transaction
 from django.db.models import Count
 from django.db.models.functions import TruncDay, TruncWeek, TruncMonth
-from django.views.decorators.http import require_http_methods, require_GET
+from django.views.decorators.http import require_http_methods, require_GET, require_POST
 from decimal import Decimal, InvalidOperation
 from django.http import JsonResponse
+from django.views.decorators.cache import never_cache
 
 from .models import (
     Paciente,
@@ -25,6 +26,7 @@ from .models import (
     Muestra,
     Extraccionista,
     MatriculaColegioSimulado,
+    LlamadoExtraccion
 )
 
 from .forms import (
@@ -1743,3 +1745,85 @@ def gestion_medicos(request):
         request,
         'analisis_bioquimico/recepcion/gestion_medicos.html'
     )
+# ==========================================
+# SALA DE ESPERA - LLAMADOS
+# ==========================================
+
+@require_POST
+def llamar_paciente(request, solicitud_id):
+    """
+    El extraccionista llama a un paciente
+    pendiente de extracción.
+    """
+
+    if not request.user.is_authenticated:
+        return redirect('analisis_bioquimico:login')
+
+    if not hasattr(request.user, 'extraccionista'):
+        messages.error(
+            request,
+            'No tiene permisos para llamar pacientes.'
+        )
+        return redirect('analisis_bioquimico:login')
+
+    solicitud = get_object_or_404(
+        SolicitudAnalisis,
+        pk=solicitud_id,
+        estado__nombre__iexact='Pendiente de muestra'
+    )
+
+    LlamadoExtraccion.objects.update_or_create(
+        solicitud=solicitud,
+        defaults={
+            'extraccionista': request.user.extraccionista
+        }
+    )
+
+    messages.success(
+        request,
+        f'Paciente de solicitud #{solicitud.id} llamado a extracción.'
+    )
+
+    return redirect('analisis_bioquimico:panel_extraccion')
+
+
+def sala_espera(request):
+    """
+    Pantalla pública para mostrar pacientes llamados.
+    """
+
+    return render(
+        request,
+        'analisis_bioquimico/sala_espera.html'
+    )
+
+
+@never_cache
+def sala_espera_datos(request):
+    """
+    Devuelve los pacientes llamados en formato JSON.
+
+    Solo incluye solicitudes pendientes de muestra.
+    """
+
+    llamados = (
+        LlamadoExtraccion.objects.filter(
+            solicitud__estado__nombre__iexact='Pendiente de muestra'
+        )
+        .select_related('solicitud__paciente')
+        .order_by('-fecha_hora', '-id')[:5]
+    )
+
+    datos = []
+
+    for llamado in llamados:
+        paciente = llamado.solicitud.paciente
+
+        datos.append({
+            'solicitud': llamado.solicitud_id,
+            'paciente': f'{paciente.nombre} {paciente.apellido}',
+        })
+
+    return JsonResponse({
+        'llamados': datos
+    })
