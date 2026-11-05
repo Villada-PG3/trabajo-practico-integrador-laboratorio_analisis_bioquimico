@@ -120,7 +120,27 @@ urlpatterns = [
         views.gestion_pacientes,
         name='gestion_pacientes'
     ),
+    # ==========================================
+    # SALA DE ESPERA
+    # ==========================================
 
+    path(
+        'sala-espera/',
+        views.sala_espera,
+        name='sala_espera'
+    ),
+
+    path(
+        'sala-espera/datos/',
+        views.sala_espera_datos,
+        name='sala_espera_datos'
+    ),
+
+    path(
+        'personal/extraccion/<int:solicitud_id>/llamar/',
+        views.llamar_paciente,
+        name='llamar_paciente'
+    ),
     # ==========================================
     # MÓDULO 2 - GESTIÓN DE ESTUDIOS
     # ==========================================

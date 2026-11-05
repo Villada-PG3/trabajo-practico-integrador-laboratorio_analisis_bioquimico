@@ -195,3 +195,20 @@ class MatriculaColegioSimulado(models.Model):
     def __str__(self):
         estado = "Habilitada" if self.habilitada else "No habilitada"
         return f"{self.matricula} - {self.apellido}, {self.nombre} ({estado})"
+    
+class LlamadoExtraccion(models.Model):
+    solicitud = models.OneToOneField(
+        SolicitudAnalisis,
+        on_delete=models.CASCADE,
+        related_name='llamado_extraccion'
+    )
+
+    extraccionista = models.ForeignKey(
+        Extraccionista,
+        on_delete=models.PROTECT
+    )
+
+    fecha_hora = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Llamado de solicitud #{self.solicitud_id}"
