@@ -10,7 +10,7 @@ from django.views.decorators.http import require_http_methods, require_GET, requ
 from decimal import Decimal, InvalidOperation
 from django.http import JsonResponse
 from django.views.decorators.cache import never_cache
-
+from .permisos import solo_responsable
 from .models import (
     Paciente,
     Medico,
@@ -44,34 +44,36 @@ from .services import enviar_email_finalizacion
 
 def login_paciente(request):
     """
-    Pantalla de acceso para pacientes usando DNI y CAP.
-    También funciona como pantalla unificada de acceso,
-    ya que desde el template se puede ingresar como Personal.
+    Inicio de sesión de pacientes mediante DNI y CAP.
+
+    La CAP debe pertenecer a un comprobante
+    asociado al paciente.
     """
 
     if request.method == 'POST':
+
         dni = request.POST.get('dni', '').strip()
         cap = request.POST.get('cap', '').strip()
 
         if not dni or not cap:
             messages.error(
                 request,
-                'Por favor ingrese su DNI y su Clave de Acceso Personal (CAP).'
+                'Debe ingresar su DNI y su CAP.'
             )
             return render(
                 request,
                 'analisis_bioquimico/portal/login.html'
             )
 
-        try:
-            paciente = Paciente.objects.get(dni=dni)
+        paciente = Paciente.objects.filter(
+            dni=dni
+        ).first()
 
-        except Paciente.DoesNotExist:
+        if paciente is None:
             messages.error(
                 request,
-                'No se encontró ningún paciente registrado con ese DNI.'
+                'DNI o CAP incorrectos.'
             )
-
             return render(
                 request,
                 'analisis_bioquimico/portal/login.html'
@@ -82,22 +84,30 @@ def login_paciente(request):
             cap=cap
         ).exists()
 
-        cap_paciente_valida = paciente.cap == cap
-
-        if comprobante_valido or cap_paciente_valida:
-
-            request.session['paciente_id'] = paciente.id
-            request.session['paciente_nombre'] = (
-                f"{paciente.nombre} {paciente.apellido}"
+        if not comprobante_valido:
+            messages.error(
+                request,
+                'DNI o CAP incorrectos.'
+            )
+            return render(
+                request,
+                'analisis_bioquimico/portal/login.html'
             )
 
-            return redirect(
-                'analisis_bioquimico:portal_historial'
-            )
+        # Cerrar cualquier sesión previa de personal
+        # y eliminar datos anteriores de la sesión.
+        logout(request)
 
-        messages.error(
-            request,
-            'La Clave de Acceso Personal (CAP) ingresada no es válida para este DNI.'
+        request.session['paciente_id'] = paciente.id
+
+        request.session['paciente_nombre'] = (
+            f'{paciente.nombre} {paciente.apellido}'
+        )
+
+        request.session.cycle_key()
+
+        return redirect(
+            'analisis_bioquimico:portal_historial'
         )
 
     return render(
@@ -120,8 +130,10 @@ def logout_paciente(request):
 
 def historial_solicitudes(request):
     """
-    Muestra las solicitudes del paciente autenticado
-    y sus resultados.
+    Muestra el historial del paciente autenticado.
+
+    Los resultados solamente se consultan cuando
+    la solicitud se encuentra Finalizada.
     """
 
     paciente_id = request.session.get('paciente_id')
@@ -159,34 +171,39 @@ def historial_solicitudes(request):
 
     if solicitud_id_seleccionada:
 
+        # La solicitud debe pertenecer al paciente.
         solicitud_seleccionada = get_object_or_404(
             SolicitudAnalisis,
             id=solicitud_id_seleccionada,
             paciente=paciente
         )
 
-        estudios_solicitud = SolicitudEstudio.objects.filter(
-            solicitud=solicitud_seleccionada
-        ).select_related(
-            'estudio'
-        )
+        # No consultar ni preparar resultados
+        # de solicitudes que todavía no finalizaron.
+        if solicitud_seleccionada.estado.nombre == 'Finalizada':
 
-        for sol_estudio in estudios_solicitud:
-
-            resultado = Resultado.objects.filter(
-                solicitud_estudio=sol_estudio
-            ).first()
-
-            rangos = RangoReferencia.objects.filter(
-                estudio=sol_estudio.estudio
+            estudios_solicitud = SolicitudEstudio.objects.filter(
+                solicitud=solicitud_seleccionada
+            ).select_related(
+                'estudio'
             )
 
-            resultados_detalle.append({
-                'solicitud_estudio': sol_estudio,
-                'estudio': sol_estudio.estudio,
-                'resultado': resultado,
-                'rangos': rangos,
-            })
+            for sol_estudio in estudios_solicitud:
+
+                resultado = Resultado.objects.filter(
+                    solicitud_estudio=sol_estudio
+                ).first()
+
+                rangos = RangoReferencia.objects.filter(
+                    estudio=sol_estudio.estudio
+                )
+
+                resultados_detalle.append({
+                    'solicitud_estudio': sol_estudio,
+                    'estudio': sol_estudio.estudio,
+                    'resultado': resultado,
+                    'rangos': rangos,
+                })
 
     context = {
         'paciente': paciente,
@@ -202,8 +219,11 @@ def historial_solicitudes(request):
     )
 def detalle_pdf_resultados(request, solicitud_id):
     """
-    Muestra una versión imprimible de los resultados
-    de una solicitud finalizada del paciente autenticado.
+    Muestra la versión imprimible de los resultados
+    de una solicitud finalizada.
+
+    Solo permite consultar solicitudes que pertenezcan
+    al paciente autenticado.
     """
 
     paciente_id = request.session.get('paciente_id')
@@ -213,7 +233,10 @@ def detalle_pdf_resultados(request, solicitud_id):
             request,
             'Debe ingresar con su DNI y CAP para consultar sus resultados.'
         )
-        return redirect('analisis_bioquimico:login')
+
+        return redirect(
+            'analisis_bioquimico:login'
+        )
 
     paciente = get_object_or_404(
         Paciente,
@@ -231,20 +254,24 @@ def detalle_pdf_resultados(request, solicitud_id):
     )
 
     if solicitud.estado.nombre != 'Finalizada':
+
         messages.warning(
             request,
-            'El informe todavía no está disponible porque la solicitud no está finalizada.'
+            'El informe todavía no está disponible '
+            'porque la solicitud no está finalizada.'
         )
 
         return redirect(
-            f"{request.build_absolute_uri('/portal/historial/')}?solicitud_id={solicitud.id}"
+            'analisis_bioquimico:portal_historial'
         )
 
     estudios_solicitud = SolicitudEstudio.objects.filter(
         solicitud=solicitud
     ).select_related(
         'estudio'
-    ).order_by('id')
+    ).order_by(
+        'id'
+    )
 
     resultados_detalle = []
 
@@ -268,7 +295,7 @@ def detalle_pdf_resultados(request, solicitud_id):
             'rangos': rangos,
         })
 
-    return render(
+    response = render(
         request,
         'analisis_bioquimico/portal/detalle_pdf.html',
         {
@@ -278,6 +305,11 @@ def detalle_pdf_resultados(request, solicitud_id):
         }
     )
 
+    # Evita que el navegador almacene en caché
+    # esta página con información médica.
+    response['Cache-Control'] = 'no-store'
+
+    return response
 # ==========================================
 # SECCIÓN: INSTITUCIONAL / HOME
 # ==========================================
@@ -295,28 +327,21 @@ def home(request):
 
 def login_personal(request):
     """
-    Procesa el inicio de sesión del personal.
-
-    La pantalla visual de acceso es portal/login.html.
-    Esta vista recibe el formulario de la pestaña Personal
-    y redirige según el rol del usuario.
+    Inicio de sesión del personal utilizando
+    los usuarios de Django y sus roles.
     """
 
-    # Si alguien entra manualmente a /personal/login/
-    # lo enviamos al login unificado.
     if request.method != 'POST':
         return redirect(
             'analisis_bioquimico:login'
         )
 
     username = request.POST.get(
-        'username',
-        ''
+        'username', ''
     ).strip()
 
     password = request.POST.get(
-        'password',
-        ''
+        'password', ''
     )
 
     user = authenticate(
@@ -326,77 +351,45 @@ def login_personal(request):
     )
 
     if user is None:
-
         messages.error(
             request,
             'Usuario o contraseña incorrectos.'
         )
-
         return redirect(
             'analisis_bioquimico:login'
         )
 
-    login(
-        request,
-        user
-    )
-
-    # --------------------------
-    # Recepcionista
-    # --------------------------
-
+    # Comprobar que tenga un rol reconocido.
     if hasattr(user, 'recepcionista'):
+        rol = 'recepcionista'
+        destino = 'analisis_bioquimico:panel_recepcion'
 
-        request.session['rol_personal'] = (
-            'recepcionista'
+    elif hasattr(user, 'extraccionista'):
+        rol = 'extraccionista'
+        destino = 'analisis_bioquimico:panel_extraccion'
+
+    elif hasattr(user, 'responsable_analisis'):
+        rol = 'responsable'
+        destino = 'analisis_bioquimico:panel_laboratorio'
+
+    else:
+        messages.error(
+            request,
+            'El usuario no tiene un rol de personal asignado.'
         )
-
         return redirect(
-            'analisis_bioquimico:panel_recepcion'
+            'analisis_bioquimico:login'
         )
 
-    # --------------------------
-    # Extraccionista
-    # --------------------------
+    # Eliminar la sesión de paciente anterior.
+    request.session.pop('paciente_id', None)
+    request.session.pop('paciente_nombre', None)
 
-    if hasattr(user, 'extraccionista'):
+    login(request, user)
 
-        request.session['rol_personal'] = (
-            'extraccionista'
-        )
+    request.session['rol_personal'] = rol
 
-        return redirect(
-            'analisis_bioquimico:panel_extraccion'
-        )
-
-    # --------------------------
-    # Responsable de análisis
-    # --------------------------
-
-    if hasattr(user, 'responsable_analisis'):
-
-        request.session['rol_personal'] = (
-            'responsable'
-        )
-
-        return redirect(
-            'analisis_bioquimico:panel_laboratorio'
-        )
-
-    # El usuario existe pero no está asociado
-    # a ningún tipo de personal.
-
-    logout(request)
-
-    messages.error(
-        request,
-        'El usuario no tiene un rol de personal asignado.'
-    )
-
-    return redirect(
-        'analisis_bioquimico:login'
-    )
-
+    return redirect(destino)
 
 def logout_personal(request):
     """
@@ -977,7 +970,7 @@ def recepcion_crear_solicitud(request):
 # ==========================================
 # SECCIÓN: MÓDULO 2 - GESTIÓN DE ESTUDIOS
 # ==========================================
-
+@solo_responsable
 def estudios_lista(request):
 
     estudios = Estudio.objects.all().order_by(
@@ -992,7 +985,7 @@ def estudios_lista(request):
         }
     )
 
-
+@solo_responsable
 def estudio_crear(request):
 
     if request.method == 'POST':
@@ -1028,7 +1021,7 @@ def estudio_crear(request):
         }
     )
 
-
+@solo_responsable
 def estudio_editar(
     request,
     estudio_id
@@ -1076,7 +1069,7 @@ def estudio_editar(
         }
     )
 
-
+@solo_responsable
 def estudio_eliminar(
     request,
     estudio_id
@@ -1111,7 +1104,7 @@ def estudio_eliminar(
         }
     )
 
-
+@solo_responsable
 def estudio_rangos(
     request,
     estudio_id
@@ -1170,7 +1163,7 @@ def estudio_rangos(
         }
     )
 
-
+@solo_responsable
 def rango_eliminar(
     request,
     rango_id
