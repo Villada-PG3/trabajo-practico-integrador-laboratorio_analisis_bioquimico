@@ -1,343 +1,420 @@
 # SAC - Sistema de Análisis Bioquímicos
 
-## Descripción
+## Descripción del proyecto
 
-SAC (Sistema de Análisis Bioquímicos) es una aplicación web desarrollada
-con Django para la gestión de las solicitudes de análisis de un laboratorio
-de análisis bioquímicos.
+SAC es una aplicación web desarrollada con Python y Django para gestionar el funcionamiento de un laboratorio de análisis bioquímicos.
 
-El sistema busca centralizar la información de los pacientes, médicos,
-recetas, solicitudes de análisis, estudios, muestras y resultados,
-permitiendo gestionar las distintas etapas del proceso dentro del laboratorio.
+El sistema permite administrar pacientes, médicos, recetas, solicitudes de análisis, estudios, muestras y resultados, acompañando el proceso desde la recepción del paciente hasta la consulta de sus resultados.
 
-El proyecto se desarrolla como parte de un Trabajo Práctico Integrador y
-está basado en el dominio de un laboratorio de análisis bioquímicos
-de la ciudad de Córdoba, Argentina.
+Este proyecto fue desarrollado como Trabajo Práctico Integrador de sexto año de secundaria, tomando como referencia el dominio de un laboratorio de análisis bioquímicos de Córdoba, Argentina.
 
-Actualmente, el proyecto se encuentra en una etapa inicial de desarrollo.
-Se han definido los principales modelos de datos y la estructura general
-de la aplicación. Las funcionalidades y las interfaces del sistema se
-incorporarán progresivamente.
+## Objetivos
 
-## Objetivos del sistema
-
-- Gestionar la información de los pacientes y los profesionales del laboratorio.
-- Registrar recetas médicas y solicitudes de análisis.
-- Administrar los estudios que realiza el laboratorio.
-- Gestionar la extracción de muestras.
-- Registrar los resultados obtenidos para cada estudio.
-- Permitir la consulta de las solicitudes y los resultados por parte de los pacientes.
-- Facilitar el seguimiento del estado de las solicitudes.
-- Generar comprobantes y notificaciones asociados al proceso.
-- Proporcionar información estadística sobre las solicitudes de análisis.
-
-## Dominio y funcionamiento
-
-El sistema contempla el proceso de atención de un paciente en un laboratorio
-de análisis bioquímicos.
-
-El flujo de trabajo previsto es el siguiente:
-
-1. **Registro de la solicitud:** el recepcionista recibe la receta médica,
-   verifica los datos del paciente y registra la solicitud con los estudios
-   correspondientes.
-
-2. **Validación de la receta:** se contempla la validación de la matrícula
-   profesional del médico y el control de la fecha de emisión de la receta.
-
-3. **Recepción y espera:** una vez registrada la solicitud, el paciente
-   queda a la espera de la extracción de las muestras.
-
-4. **Extracción de muestras:** un extraccionista se encarga de obtener las
-   muestras necesarias y registrar la extracción en el sistema.
-
-5. **Realización de los estudios:** el responsable de análisis registra
-   los valores obtenidos para los estudios solicitados.
-
-6. **Finalización:** cuando se completan los estudios de una solicitud,
-   esta pasa al estado de finalizada.
-
-7. **Consulta de resultados:** se prevé que el paciente pueda consultar
-   sus solicitudes y los resultados disponibles mediante sus datos de acceso.
-
-8. **Notificaciones y comprobantes:** el sistema contempla la generación
-   de comprobantes y el envío de notificaciones relacionadas con las
-   solicitudes y la disponibilidad de resultados.
-
-Este flujo describe el funcionamiento previsto del sistema. Las etapas se
-irán implementando a medida que avance el desarrollo.
-
-## Actores del sistema
-
-El dominio contempla los siguientes actores:
-
-- **Paciente:** solicita análisis y consulta sus solicitudes y resultados.
-- **Médico:** emite las recetas que indican los estudios que debe realizarse
-  el paciente.
-- **Recepcionista:** registra las solicitudes y gestiona los datos necesarios
-  para iniciar el proceso.
-- **Extraccionista:** realiza y registra la extracción de las muestras.
-- **Responsable de análisis:** registra los resultados de los estudios.
-- **Responsable de laboratorio:** consulta información estadística sobre
-  las solicitudes y los estudios realizados.
-
-Los permisos, las interfaces y las operaciones específicas de cada actor
-se incorporarán durante el desarrollo.
-
-## Funcionalidades previstas
-
-Las funcionalidades contempladas para el sistema son:
-
-### Gestión de pacientes y profesionales
-- Registro y consulta de pacientes.
-- Actualización de los datos de contacto de los pacientes.
-- Registro de médicos y sus matrículas profesionales.
-- Gestión de recepcionistas, extraccionistas y responsables de análisis.
-
-### Gestión de recetas y solicitudes
-- Registro de recetas médicas.
-- Almacenamiento de recetas en formato PDF.
-- Creación de solicitudes de análisis.
-- Asociación de pacientes, recetas y recepcionistas.
-- Selección de los estudios correspondientes a cada solicitud.
-- Seguimiento del estado de las solicitudes.
-
-### Gestión de estudios y muestras
-- Administración del catálogo de estudios.
-- Definición de rangos de referencia para los estudios.
-- Registro de muestras y de los responsables de su extracción.
-- Seguimiento de las etapas de procesamiento de las muestras.
-
-### Gestión de resultados
-- Registro de resultados asociados a los estudios solicitados.
-- Asociación de los resultados con el responsable de análisis.
-- Consulta de los valores obtenidos y sus rangos de referencia.
-
-### Comprobantes y notificaciones
-- Generación de comprobantes asociados a las solicitudes.
-- Registro de notificaciones relacionadas con el proceso.
-- Notificación al paciente sobre la disponibilidad de sus resultados.
-
-### Reportes
-- Consulta de la cantidad de solicitudes por período.
-- Posibilidad de discriminar la información por estudio.
-- Generación de reportes estadísticos para el laboratorio.
-
-Las funcionalidades enumeradas representan los objetivos del proyecto y no
-implican que todas estén disponibles en la versión actual.
+- Centralizar la información del laboratorio en una base de datos.
+- Registrar pacientes y médicos.
+- Validar las matrículas profesionales de los médicos mediante un servicio simulado.
+- Gestionar recetas y solicitudes de análisis.
+- Registrar extracciones de muestras.
+- Cargar los resultados de los estudios solicitados.
+- Permitir que los pacientes consulten sus resultados.
+- Generar comprobantes con una Clave de Acceso Personal (CAP).
+- Enviar notificaciones relacionadas con las solicitudes.
+- Consultar reportes estadísticos del laboratorio.
 
 ## Tecnologías utilizadas
 
-Las tecnologías y herramientas utilizadas actualmente son:
-
-- **Python:** lenguaje de programación.
-- **Django 6.1.1:** framework para el desarrollo web.
-- **SQLite:** motor de base de datos utilizado durante el desarrollo.
-- **Pillow 12.3.0:** biblioteca de procesamiento de imágenes incluida
-  entre las dependencias del proyecto.
-
-Las dependencias se encuentran especificadas en el archivo
-`requirements.txt`.
-
-## Modelo de datos
-
-El sistema utiliza modelos de Django para representar las entidades
-principales del dominio.
-
-Los modelos se encuentran definidos en:
-
-`analisis_bioquimico/models.py`
-
-### Entidades principales
-
-| Entidad | Descripción |
+| Tecnología | Uso |
 |---|---|
-| Paciente | Almacena los datos personales y de contacto del paciente. |
-| Medico | Representa al profesional que emite las recetas. |
-| Recepcionista | Representa al personal que registra las solicitudes. |
-| Extraccionista | Representa al personal encargado de extraer las muestras. |
-| ResponsableAnalisis | Representa al responsable de registrar los resultados. |
-| EstadoSolicitud | Define los estados disponibles para las solicitudes. |
-| Estudio | Contiene la información de los análisis que realiza el laboratorio. |
-| RangoReferencia | Define los rangos de referencia asociados a los estudios. |
-| Receta | Almacena la información de la receta médica y el archivo PDF. |
-| SolicitudAnalisis | Representa una solicitud de análisis de un paciente. |
-| SolicitudEstudio | Relaciona una solicitud con cada estudio requerido. |
-| Muestra | Registra las muestras asociadas a una solicitud. |
-| Resultado | Almacena el valor obtenido para un estudio solicitado. |
-| Comprobante | Registra los comprobantes asociados a las solicitudes y muestras. |
-| Notificacion | Registra las notificaciones relacionadas con una solicitud. |
+| Python | Lenguaje de programación principal |
+| Django 6.1.1 | Framework web |
+| SQLite | Base de datos durante el desarrollo |
+| HTML | Estructura de las páginas |
+| CSS y Bootstrap 5 | Diseño de las interfaces |
+| JavaScript | Interactividad y actualización de la sala de espera |
+| Chart.js | Visualización de reportes estadísticos |
+| Pillow | Soporte para procesamiento de imágenes |
+| Git y GitHub | Control de versiones y trabajo colaborativo |
 
-Las relaciones entre las entidades se implementan mediante campos de tipo
-`ForeignKey` y las reglas de integridad correspondientes de Django.
+Las dependencias Python están especificadas en `requirements.txt`.
 
-### Diagramas
+## Arquitectura del proyecto
 
-La documentación del modelo y del diseño se encuentra en la carpeta `docs/`.
+El proyecto utiliza la arquitectura de Django y está organizado alrededor de una única aplicación llamada `analisis_bioquimico`.
 
-- **Diagrama Entidad-Relación:** `docs/diagramaER.mmd`
-- **Diagrama UML:** `docs/diagramaUML.mmd`
+Esta aplicación contiene los modelos, formularios, vistas, rutas y templates necesarios para los distintos módulos del laboratorio.
 
-Los diagramas representan el diseño del sistema y se actualizarán cuando
-se modifiquen las entidades o sus relaciones.
+Los datos se almacenan en la base de datos mediante el ORM de Django, evitando definir pacientes, médicos o empleados directamente en el código.
 
-## Estructura del proyecto
+## Actores del sistema
 
-La estructura actual del repositorio es la siguiente:
+### Paciente
 
-    .
-    ├── analisis_bioquimico/
-    │   ├── migrations/
-    │   │   └── 0001_initial.py
-    │   ├── __init__.py
-    │   ├── admin.py
-    │   ├── apps.py
-    │   ├── models.py
-    │   ├── tests.py
-    │   └── views.py
-    │
-    ├── config/
-    │   ├── __init__.py
-    │   ├── asgi.py
-    │   ├── settings.py
-    │   ├── urls.py
-    │   └── wsgi.py
-    │
-    ├── docs/
-    │   ├── diagramaER.mmd
-    │   └── diagramaUML.mmd
-    │
-    ├── .gitignore
-    ├── db.sqlite3
-    ├── manage.py
-    └── requirements.txt
+Puede ingresar al portal utilizando su DNI y la Clave de Acceso Personal (CAP), consultar su historial de solicitudes y acceder a los informes de las solicitudes finalizadas.
 
-### Descripción de los archivos y directorios
+### Médico
 
-- `analisis_bioquimico/`: aplicación principal del sistema.
-- `analisis_bioquimico/models.py`: definición de los modelos de datos.
-- `analisis_bioquimico/views.py`: lugar donde se implementará la lógica
-  de las vistas.
-- `analisis_bioquimico/admin.py`: configuración del administrador de Django.
-- `analisis_bioquimico/tests.py`: pruebas automatizadas de la aplicación.
-- `analisis_bioquimico/migrations/`: migraciones de los modelos.
-- `config/`: configuración general del proyecto Django.
-- `config/settings.py`: configuración de aplicaciones, base de datos y otros
-  componentes del proyecto.
-- `config/urls.py`: configuración de las rutas principales.
-- `docs/`: diagramas y documentación del diseño.
-- `manage.py`: herramienta para ejecutar comandos administrativos de Django.
-- `requirements.txt`: dependencias necesarias para el proyecto.
-- `db.sqlite3`: archivo de base de datos SQLite utilizado en desarrollo.
+Es el profesional que emite la receta médica e indica los estudios que debe realizarse el paciente.
 
-## Instalación y ejecución
+Su matrícula profesional debe estar habilitada para que pueda ser seleccionado al registrar una solicitud.
+
+### Recepcionista
+
+Se encarga de buscar y registrar pacientes, actualizar sus datos de contacto, validar médicos, recibir recetas y crear solicitudes.
+
+### Extraccionista
+
+Consulta las solicitudes pendientes, llama a los pacientes, registra la toma de muestras y genera los comprobantes con CAP.
+
+### Responsable de Análisis
+
+Administra el catálogo de estudios y sus rangos de referencia, carga los resultados y consulta los reportes estadísticos.
+
+## Funcionalidades implementadas
+
+### 1. Gestión de pacientes
+
+El recepcionista puede buscar pacientes mediante su DNI.
+
+Si el paciente existe, puede modificar sus datos de contacto. Si no existe, puede registrarlo en la base de datos.
+
+El DNI es único para evitar duplicaciones.
+
+### 2. Gestión de médicos
+
+Se implementó una simulación del servicio de validación de matrículas profesionales del Colegio Médico.
+
+El recepcionista ingresa una matrícula y el sistema consulta un registro simulado almacenado en la base de datos.
+
+La consulta devuelve una respuesta JSON con el estado de habilitación y los datos del médico.
+
+Si la matrícula está habilitada, el médico puede registrarse o actualizarse en la base de datos del laboratorio.
+
+**Aclaración:** esta funcionalidad simula el servicio externo. No realiza consultas al Colegio Médico real.
+
+### 3. Recepción de recetas y solicitudes
+
+El recepcionista registra una nueva solicitud vinculando:
+
+- Paciente.
+- Médico solicitante.
+- Fecha de emisión de la receta.
+- Archivo escaneado de la receta.
+- Estudios solicitados.
+
+La fecha de la receta no puede ser futura ni superar los 30 días de antigüedad.
+
+Al registrar una solicitud, su estado inicial es `Pendiente de muestra`.
+
+También se genera una notificación por correo electrónico para confirmar el registro.
+
+### 4. Sala de espera
+
+El extraccionista puede llamar a los pacientes pendientes.
+
+La pantalla pública de sala de espera muestra el nombre del paciente y el número de solicitud.
+
+La información se actualiza automáticamente mediante JavaScript y consultas periódicas a Django.
+
+Una vez completada la extracción, la solicitud deja de aparecer como pendiente en la sala de espera.
+
+### 5. Extracción y comprobante
+
+El extraccionista selecciona una solicitud y registra el tipo de muestra obtenida.
+
+Después de confirmar la extracción:
+
+- Se guarda la muestra.
+- Se identifica al extraccionista responsable.
+- Se genera un comprobante.
+- Se genera una CAP para que el paciente pueda consultar sus resultados.
+- La solicitud pasa al estado `Pendiente de análisis`.
+
+### 6. Gestión de estudios
+
+El Responsable de Análisis puede crear, consultar, editar y eliminar estudios, además de administrar sus rangos de referencia.
+
+Cada estudio puede tener un código, nombre, descripción, método o técnica, unidad de medida y rangos de referencia.
+
+### 7. Carga de resultados
+
+El Responsable de Análisis registra los valores hallados de cada estudio solicitado.
+
+Cuando se carga el primer resultado, la solicitud pasa a `En análisis`.
+
+Cuando todos los estudios tienen resultados registrados, la solicitud pasa automáticamente a `Finalizada`.
+
+Al finalizar se genera una notificación para el paciente.
+
+### 8. Portal del paciente
+
+El paciente inicia sesión mediante DNI y CAP.
+
+Desde el portal puede consultar su historial de solicitudes y conocer el estado de cada una.
+
+Los resultados solamente están disponibles cuando la solicitud se encuentra finalizada.
+
+También puede abrir una versión imprimible del informe y utilizar la opción del navegador para guardarlo como PDF.
+
+**Aclaración:** el informe se imprime o guarda como PDF mediante el navegador, no mediante un generador de PDF del servidor.
+
+### 9. Reportes estadísticos
+
+El Responsable de Análisis puede consultar gráficos estadísticos que muestran el volumen de solicitudes.
+
+Los reportes permiten agrupar los registros por día, semana o mes y filtrar por estudio.
+
+### 10. Autenticación y permisos
+
+El sistema utiliza la autenticación de Django para los empleados.
+
+Los pacientes utilizan un acceso independiente mediante DNI y CAP.
+
+Las vistas protegidas verifican el rol correspondiente antes de permitir el acceso a las funciones.
+
+El sistema impide que un paciente consulte informes pertenecientes a otro paciente.
+
+## Estados de una solicitud
+
+Una solicitud atraviesa las siguientes etapas:
+
+```text
+Pendiente de muestra
+        |
+        v
+Pendiente de análisis
+        |
+        v
+En análisis
+        |
+        v
+Finalizada
+```
+
+Los cambios de estado se realizan de acuerdo con las operaciones registradas en el sistema.
+
+## Estructura general del proyecto
+
+```text
+proyecto/
+|
+|-- analisis_bioquimico/
+|   |-- migrations/
+|   |-- templates/
+|   |   `-- analisis_bioquimico/
+|   |       |-- personal/
+|   |       |-- portal/
+|   |       |-- recepcion/
+|   |       |-- laboratorio/
+|   |       `-- sala_espera.html
+|   |
+|   |-- admin.py
+|   |-- apps.py
+|   |-- forms.py
+|   |-- models.py
+|   |-- permisos.py
+|   |-- services.py
+|   |-- urls.py
+|   `-- views.py
+|
+|-- config/
+|   |-- settings.py
+|   |-- urls.py
+|   |-- asgi.py
+|   `-- wsgi.py
+|
+|-- docs/
+|-- manage.py
+|-- requirements.txt
+|-- README.md
+`-- .gitignore
+```
+
+La carpeta `docs/` está destinada a contener el Diagrama Entidad-Relación (DER) y el Diagrama de Clases UML.
+
+## Instalación del proyecto
 
 ### Requisitos previos
 
-- Python instalado.
-- Git, si se desea clonar el repositorio.
-- Una terminal compatible con los comandos indicados.
+- Python compatible con las dependencias del proyecto.
+- Git.
+- Una terminal.
+- Acceso al repositorio.
 
 ### 1. Clonar el repositorio
 
-    git clone https://github.com/Villada-PG3/trabajo-practico-integrador-laboratorio_analisis_bioquimico.git
-    cd trabajo-practico-integrador-laboratorio_analisis_bioquimico
+```bash
+git clone https://github.com/Villada-PG3/trabajo-practico-integrador-laboratorio_analisis_bioquimico.git
 
-Si ya se dispone del proyecto localmente, se puede omitir este paso.
+cd trabajo-practico-integrador-laboratorio_analisis_bioquimico
+```
 
-### 2. Crear un entorno virtual
+### 2. Crear el entorno virtual
 
-    python -m venv .venv
+```bash
+python -m venv .venv
+```
 
 ### 3. Activar el entorno virtual
 
-En Windows, utilizando CMD:
-
-    .venv\Scripts\activate
-
-En Windows, utilizando PowerShell:
-
-    .venv\Scripts\Activate.ps1
-
 En Linux o macOS:
 
-    source .venv/bin/activate
+```bash
+source .venv/bin/activate
+```
+
+En Windows (CMD):
+
+```bat
+.venv\Scripts\activate
+```
+
+En Windows (PowerShell):
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
 
 ### 4. Instalar las dependencias
 
-    python -m pip install -r requirements.txt
+```bash
+python -m pip install -r requirements.txt
+```
 
 ### 5. Aplicar las migraciones
 
-    python manage.py migrate
+```bash
+python manage.py migrate
+```
 
-Si se incorporan o modifican modelos y sus cambios todavía no tienen
-una migración generada, ejecutar primero:
+Las migraciones existentes crean las tablas necesarias para almacenar los datos del laboratorio.
 
-    python manage.py makemigrations
+### 6. Crear un superusuario
 
-Y luego:
+```bash
+python manage.py createsuperuser
+```
 
-    python manage.py migrate
+El superusuario permite acceder al administrador de Django y gestionar los registros iniciales.
 
-### 6. Iniciar el servidor de desarrollo
+### 7. Iniciar el servidor
 
-    python manage.py runserver
+```bash
+python manage.py runserver
+```
 
-Django iniciará el servidor de desarrollo, normalmente disponible en:
+El sistema estará disponible normalmente en:
 
-http://127.0.0.1:8000/
+`http://127.0.0.1:8000/`
 
-Las páginas y funcionalidades disponibles dependerán de las vistas y rutas
-que se hayan implementado.
+El administrador de Django estará disponible en:
 
-## Base de datos
+`http://127.0.0.1:8000/admin/`
 
-Durante el desarrollo se utiliza SQLite.
+## Configuración inicial
 
-La configuración de la base de datos se encuentra en `config/settings.py`
-y el archivo local se denomina `db.sqlite3`.
+Después de aplicar las migraciones, deben cargarse los datos necesarios para utilizar el sistema, incluyendo:
 
-Django utiliza migraciones para reflejar los cambios de los modelos en la
-estructura de la base de datos.
+- Usuarios del personal.
+- Recepcionistas.
+- Extraccionistas.
+- Responsables de análisis.
+- Estudios y rangos de referencia.
+- Matrículas del Colegio Médico simulado, para probar la validación.
 
-Cuando se agreguen, eliminen o modifiquen campos o modelos, será necesario
-revisar y aplicar las migraciones correspondientes.
+Los usuarios del personal deben estar asociados a su correspondiente registro de empleado.
 
-## Estado actual del proyecto
+Los datos se cargan en la base de datos y no se encuentran definidos directamente en el código.
 
-El proyecto se encuentra en una etapa inicial de desarrollo.
+## Correos electrónicos
 
-Actualmente:
+Durante el desarrollo, el proyecto utiliza el backend de correo por consola de Django.
 
-- Está creada la estructura base del proyecto Django.
-- Está creada la aplicación `analisis_bioquimico`.
-- Están definidos los modelos principales del dominio.
-- Está configurada una base de datos SQLite.
-- Se dispone de una migración inicial.
-- Se encuentran los diagramas ER y UML en la carpeta `docs/`.
+Esto permite comprobar los mensajes generados por el sistema sin realizar envíos reales a direcciones externas.
 
-Pendiente de desarrollo:
+Para utilizar correos reales será necesario configurar un proveedor de email y sus credenciales.
 
-- Configuración de las rutas y las vistas.
-- Implementación de las operaciones de consulta, creación, modificación
-  y eliminación que correspondan.
-- Configuración del administrador de Django.
-- Desarrollo de las interfaces de usuario.
-- Implementación de las reglas de negocio y validaciones.
-- Gestión de los estados y las transiciones de las solicitudes.
-- Implementación de la autenticación y los permisos según los roles.
-- Validación de matrículas profesionales mediante el servicio externo previsto.
-- Envío de correos electrónicos y notificaciones.
-- Consulta de resultados por parte de los pacientes.
-- Generación de reportes estadísticos.
-- Pruebas automatizadas de las funcionalidades.
+## Modelos de datos
 
-Esta lista se actualizará a medida que se incorporen nuevas funcionalidades.
+Los modelos principales del laboratorio son:
 
-## Documentación
+- `Paciente`
+- `Medico`
+- `Recepcionista`
+- `Extraccionista`
+- `ResponsableAnalisis`
+- `EstadoSolicitud`
+- `Estudio`
+- `RangoReferencia`
+- `Receta`
+- `SolicitudAnalisis`
+- `SolicitudEstudio`
+- `Muestra`
+- `Resultado`
+- `Comprobante`
+- `Notificacion`
+- `MatriculaColegioSimulado`
+- `LlamadoExtraccion`
 
-Los diagramas del sistema se encuentran en la carpeta `docs/`.
+Las relaciones entre modelos se implementan mediante campos como `ForeignKey` y `OneToOneField` de Django.
 
-Los archivos `.mmd` contienen los diagramas en formato Mermaid y pueden
-visualizarse con herramientas compatibles con este formato.
+## Diagramas
+
+El diseño del proyecto se documenta mediante:
+
+- Diagrama Entidad-Relación (DER).
+- Diagrama de Clases UML.
+
+Estos diagramas deben mantenerse en la carpeta `docs/` del repositorio.
+
+## Metodología de trabajo con GitHub
+
+El proyecto se desarrolló de manera colaborativa utilizando Git y GitHub.
+
+Se utiliza una rama `main` como base principal del proyecto.
+
+Cada funcionalidad o corrección se desarrolla en una rama independiente con un nombre descriptivo, por ejemplo:
+
+```text
+feature/recepcion-completa
+feature/sala-espera
+feature/permisos-seguridad
+```
+
+Una vez probados los cambios, se realiza un commit y se sube la rama a GitHub.
+
+Después se crea un Pull Request para revisar e incorporar los cambios a `main`.
+
+Esta metodología permite mantener un historial de cambios y facilitar la recuperación de versiones anteriores.
+
+## Pruebas realizadas
+
+Se realizó una prueba integral del sistema recorriendo las siguientes etapas:
+
+1. Registro de paciente.
+2. Validación del médico.
+3. Carga de receta y creación de solicitud.
+4. Llamado en sala de espera.
+5. Registro de extracción.
+6. Generación del comprobante y CAP.
+7. Carga parcial y completa de resultados.
+8. Finalización automática de la solicitud.
+9. Consulta de resultados mediante DNI y CAP.
+10. Impresión y guardado del informe como PDF.
+
+También se probaron los controles de acceso por roles y la restricción para consultar informes de otros pacientes.
+
+Estas comprobaciones corresponden a pruebas funcionales manuales.
+
+## Alcance y limitaciones
+
+El sistema fue desarrollado con fines académicos.
+
+La validación del Colegio Médico es simulada, los correos electrónicos se muestran en consola durante el desarrollo y los PDF de resultados se obtienen mediante la función de impresión del navegador.
+
+La aplicación no está preparada para utilizarse con información médica real en un entorno de producción sin realizar verificaciones adicionales de seguridad, privacidad, configuración y funcionamiento.
+
+## Estado del proyecto
+
+Los módulos funcionales principales se encuentran implementados y fueron probados mediante un recorrido integral del sistema.
+
+El proyecto se encuentra en la etapa de documentación y preparación para la presentación final.

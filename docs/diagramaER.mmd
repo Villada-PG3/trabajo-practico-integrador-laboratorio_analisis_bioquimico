@@ -1,130 +1,186 @@
+
 erDiagram
+    USUARIO {
+        int id PK
+        string username UK
+        string password
+        boolean is_active
+    }
+
     PACIENTE {
         int id PK
         string nombre
         string apellido
         string email
-        string dni
+        string dni UK
         string telefono
         string domicilio
         string cap
     }
+
     MEDICO {
         int id PK
         string nombre
         string apellido
         string email
-        string matricula
+        string matricula UK
         string especialidad
         boolean validado_colegio
     }
+
+    MATRICULA_COLEGIO_SIMULADO {
+        int id PK
+        string matricula UK
+        string nombre
+        string apellido
+        string email
+        string especialidad
+        boolean habilitada
+    }
+
     RECEPCIONISTA {
         int id PK
+        int user_id FK,UK
         string nombre
         string apellido
         string email
     }
+
     EXTRACCIONISTA {
         int id PK
+        int user_id FK,UK
         string nombre
         string apellido
         string email
-        string legajo
+        string legajo UK
     }
+
     RESPONSABLE_ANALISIS {
         int id PK
+        int user_id FK,UK
         string nombre
         string apellido
         string email
-        string legajo
+        string legajo UK
         string cargo
     }
+
     ESTADO_SOLICITUD {
         int id PK
         string nombre
         string descripcion
     }
+
     ESTUDIO {
         int id PK
-        string codigo
+        string codigo UK
         string nombre
         string descripcion
         string metodo_tecnica
         string unidad_medida
     }
+
     RANGO_REFERENCIA {
         int id PK
-        int id_estudio FK
+        int estudio_id FK
         float valor_min
         float valor_max
         string genero
         int edad_min
         int edad_max
     }
+
     RECETA {
         int id PK
-        int id_medico FK
-        int id_paciente FK
+        int medico_id FK
+        int paciente_id FK
         date fecha_emision
         string archivo_pdf
     }
+
     SOLICITUD_ANALISIS {
         int id PK
-        int id_paciente FK
-        int id_receta FK
-        int id_recepcionista FK
-        int id_estado FK
+        int paciente_id FK
+        int receta_id FK
+        int recepcionista_id FK
+        int estado_id FK
         datetime fecha_hora
     }
+
     SOLICITUD_ESTUDIO {
         int id PK
-        int id_solicitud FK
-        int id_estudio FK
+        int solicitud_id FK
+        int estudio_id FK
         string estado
     }
+
     MUESTRA {
         int id PK
-        int id_solicitud FK
-        int id_extraccionista FK
+        int solicitud_id FK
+        int extraccionista_id FK
         string tipo
         datetime fecha_hora_extraccion
     }
+
     RESULTADO {
         int id PK
-        int id_solicitud_estudio FK
-        int id_responsable FK
+        int solicitud_estudio_id FK,UK
+        int responsable_id FK
         float valor_hallado
         datetime fecha_registro
     }
+
     COMPROBANTE {
         int id PK
-        int id_solicitud FK
-        int id_muestra FK
+        int solicitud_id FK
+        int muestra_id FK
         datetime fecha_emision
-        string cap
+        string cap UK
         int numero_paciente
     }
+
     NOTIFICACION {
         int id PK
-        int id_solicitud FK
+        int solicitud_id FK
         string tipo
         string estado
         datetime fecha_envio
     }
 
+    LLAMADO_EXTRACCION {
+        int id PK
+        int solicitud_id FK,UK
+        int extraccionista_id FK
+        datetime fecha_hora
+    }
+
+    USUARIO |o--o| RECEPCIONISTA : "acceso"
+    USUARIO |o--o| EXTRACCIONISTA : "acceso"
+    USUARIO |o--o| RESPONSABLE_ANALISIS : "acceso"
+
     PACIENTE ||--o{ RECETA : "tiene"
     MEDICO ||--o{ RECETA : "emite"
-    RECETA ||--o{ SOLICITUD_ANALISIS : "origina"
-    PACIENTE ||--o{ SOLICITUD_ANALISIS : "genera"
+
+    RECETA |o--o{ SOLICITUD_ANALISIS : "origina"
+    PACIENTE ||--o{ SOLICITUD_ANALISIS : "solicita"
     RECEPCIONISTA ||--o{ SOLICITUD_ANALISIS : "registra"
     ESTADO_SOLICITUD ||--o{ SOLICITUD_ANALISIS : "clasifica"
+
     SOLICITUD_ANALISIS ||--o{ SOLICITUD_ESTUDIO : "incluye"
     ESTUDIO ||--o{ SOLICITUD_ESTUDIO : "forma parte"
+
     ESTUDIO ||--o{ RANGO_REFERENCIA : "posee"
+
     SOLICITUD_ANALISIS ||--o{ MUESTRA : "requiere"
     EXTRACCIONISTA ||--o{ MUESTRA : "extrae"
-    SOLICITUD_ESTUDIO ||--o{ RESULTADO : "produce"
+
+    SOLICITUD_ESTUDIO ||--o| RESULTADO : "produce"
     RESPONSABLE_ANALISIS ||--o{ RESULTADO : "registra"
+
     SOLICITUD_ANALISIS ||--o{ COMPROBANTE : "genera"
     MUESTRA ||--o{ COMPROBANTE : "referencia"
+
     SOLICITUD_ANALISIS ||--o{ NOTIFICACION : "dispara"
+
+    SOLICITUD_ANALISIS ||--o| LLAMADO_EXTRACCION : "recibe llamado"
+    EXTRACCIONISTA ||--o{ LLAMADO_EXTRACCION : "llama"

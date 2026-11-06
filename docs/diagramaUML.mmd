@@ -1,132 +1,183 @@
+
 classDiagram
-    class Persona {
-        #str nombre
-        #str apellido
-        #str email
-        +getNombreCompleto()
+    class User {
+        +int id
+        +str username
+        +str password
+        +bool is_active
     }
 
     class Paciente {
-        -str dni
-        -str telefono
-        -str domicilio
-        +solicitarAnalisis() 
-        +verHistorial() 
+        +int id
+        +str nombre
+        +str apellido
+        +str email
+        +str dni
+        +str telefono
+        +str domicilio
+        +str cap
+        +__str__()
     }
 
     class Medico {
-        -str matricula
-        -str especialidad
-        -bool validadoColegio
-        +emitirReceta(paciente: Paciente) 
-        +validarMatricula()
+        +int id
+        +str nombre
+        +str apellido
+        +str email
+        +str matricula
+        +str especialidad
+        +bool validado_colegio
+        +__str__()
+    }
+
+    class MatriculaColegioSimulado {
+        +int id
+        +str matricula
+        +str nombre
+        +str apellido
+        +str email
+        +str especialidad
+        +bool habilitada
+        +__str__()
     }
 
     class Recepcionista {
-        -int id
-        +registrarSolicitud(receta: Receta)
-        +emitirComprobante(solicitud: SolicitudAnalisis) 
+        +int id
+        +str nombre
+        +str apellido
+        +str email
+        +__str__()
     }
 
     class Extraccionista {
-        -int id
-        -str legajo
-        +extraerMuestra(solicitud: SolicitudAnalisis) 
+        +int id
+        +str nombre
+        +str apellido
+        +str email
+        +str legajo
+        +__str__()
     }
 
     class ResponsableAnalisis {
-        -int id
-        -str legajo
-        -str cargo
-        +registrarResultado(solicitudEstudio: SolicitudEstudio)
-    }
-
-    class Receta {
-        -int id
-        -date fechaEmision
-        -str estado
-        +estaVigente() 
-        +generarSolicitud() 
-    }
-
-    class SolicitudAnalisis {
-        -int id
-        -datetime fechaHora
-        -str estado
-        +agregarEstudio(estudio: Estudio) 
-        +cambiarEstado(nuevoEstado: EstadoSolicitud) 
-        +generarComprobante() 
-    }
-
-    class SolicitudEstudio {
-        -int id
-        -str estado
-        +registrarResultado(valor: float) 
-    }
-
-    class Estudio {
-        -int id
-        -str codigo
-        -str nombre
-        -str descripcion
-        -str metodoTecnica
-        -str unidadMedida
-        +obtenerRangoReferencia(genero: string, edad: int)
-    }
-
-    class RangoReferencia {
-        -int id
-        -float valorMin
-        -float valorMax
-        -str genero
-        -int edadMin
-        -int edadMax
-        +estaEnRango(valor: float, genero: string, edad: int)
-    }
-
-    class Muestra {
-        -int id
-        -str tipo
-        -datetime fechaHoraExtraccion
-    }
-
-    class Resultado {
-        -int id
-        -float valorHallado
-        -datetime fechaRegistro
-        +esNormal(rango: RangoReferencia)
-    }
-
-    class Comprobante {
-        -int id
-        -datetime fechaEmision
-        -str cap
-        +imprimir()
+        +int id
+        +str nombre
+        +str apellido
+        +str email
+        +str legajo
+        +str cargo
+        +__str__()
     }
 
     class EstadoSolicitud {
-        -int id
-        -str nombre
-        -str descripcion
+        +int id
+        +str nombre
+        +str descripcion
+        +__str__()
     }
 
-    Persona <|-- Paciente
-    Persona <|-- Medico
-    Persona <|-- Recepcionista
-    Persona <|-- Extraccionista
-    Persona <|-- ResponsableAnalisis
+    class Estudio {
+        +int id
+        +str codigo
+        +str nombre
+        +str descripcion
+        +str metodo_tecnica
+        +str unidad_medida
+        +__str__()
+    }
+
+    class RangoReferencia {
+        +int id
+        +float valor_min
+        +float valor_max
+        +str genero
+        +int edad_min
+        +int edad_max
+        +__str__()
+    }
+
+    class Receta {
+        +int id
+        +date fecha_emision
+        +str archivo_pdf
+        +__str__()
+    }
+
+    class SolicitudAnalisis {
+        +int id
+        +datetime fecha_hora
+        +__str__()
+    }
+
+    class SolicitudEstudio {
+        +int id
+        +str estado
+        +__str__()
+    }
+
+    class Muestra {
+        +int id
+        +str tipo
+        +datetime fecha_hora_extraccion
+        +__str__()
+    }
+
+    class Resultado {
+        +int id
+        +float valor_hallado
+        +datetime fecha_registro
+        +__str__()
+    }
+
+    class Comprobante {
+        +int id
+        +datetime fecha_emision
+        +str cap
+        +int numero_paciente
+        +save()
+        +__str__()
+    }
+
+    class Notificacion {
+        +int id
+        +str tipo
+        +str estado
+        +datetime fecha_envio
+        +__str__()
+    }
+
+    class LlamadoExtraccion {
+        +int id
+        +datetime fecha_hora
+        +__str__()
+    }
+
+    User "0..1" --> "0..1" Recepcionista : cuenta
+    User "0..1" --> "0..1" Extraccionista : cuenta
+    User "0..1" --> "0..1" ResponsableAnalisis : cuenta
 
     Paciente "1" --> "0..*" Receta : tiene
     Medico "1" --> "0..*" Receta : emite
-    Paciente "1" --> "0..*" SolicitudAnalisis : genera
-    Receta "1" --> "0..1" SolicitudAnalisis : origina
+
+    Paciente "1" --> "0..*" SolicitudAnalisis : solicita
+    Receta "0..1" --> "0..*" SolicitudAnalisis : origina
     Recepcionista "1" --> "0..*" SolicitudAnalisis : registra
     EstadoSolicitud "1" --> "0..*" SolicitudAnalisis : clasifica
-    SolicitudAnalisis "1" *-- "1..*" SolicitudEstudio : incluye
-    SolicitudAnalisis "1" --> "0..1" Muestra : requiere
-    SolicitudAnalisis "1" --> "0..1" Comprobante : genera
+
+    SolicitudAnalisis "1" --> "0..*" SolicitudEstudio : incluye
+    Estudio "1" --> "0..*" SolicitudEstudio : corresponde
+
+    Estudio "1" --> "0..*" RangoReferencia : posee
+
+    SolicitudAnalisis "1" --> "0..*" Muestra : tiene
     Extraccionista "1" --> "0..*" Muestra : extrae
-    Estudio "1" --> "0..*" SolicitudEstudio : forma parte
-    Estudio "1" --> "0..*" RangoReferencia : tiene
+
     SolicitudEstudio "1" --> "0..1" Resultado : produce
     ResponsableAnalisis "1" --> "0..*" Resultado : registra
+
+    SolicitudAnalisis "1" --> "0..*" Comprobante : genera
+    Muestra "1" --> "0..*" Comprobante : referencia
+
+    SolicitudAnalisis "1" --> "0..*" Notificacion : genera
+
+    SolicitudAnalisis "1" --> "0..1" LlamadoExtraccion : recibe
+    Extraccionista "1" --> "0..*" LlamadoExtraccion : realiza
