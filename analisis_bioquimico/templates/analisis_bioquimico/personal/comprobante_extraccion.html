@@ -179,14 +179,13 @@
 
                     <div class="d-flex gap-2">
 
-                        <button
-                            type="button"
+                        <a
+                            href="{% url 'analisis_bioquimico:descargar_comprobante_extraccion_pdf' comprobante.id %}"
                             class="btn btn-primary"
-                            onclick="window.print()"
                         >
-                            <i class="bi bi-printer me-1"></i>
-                            Imprimir
-                        </button>
+                            <i class="bi bi-file-earmark-pdf me-1"></i>
+                            Descargar PDF
+                        </a>
 
 
                         <a

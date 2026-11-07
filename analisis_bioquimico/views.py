@@ -8,7 +8,7 @@ from django.db.models import Count
 from django.db.models.functions import TruncDay, TruncWeek, TruncMonth
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
 from decimal import Decimal, InvalidOperation
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.cache import never_cache
 from .permisos import solo_responsable
 from .models import (
@@ -37,6 +37,16 @@ from .forms import (
 )
 
 from .services import enviar_email_finalizacion
+from reportlab.platypus import (
+    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
+    KeepTogether
+)
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.units import cm
+from xml.sax.saxutils import escape
 
 # ==========================================
 # SECCIÓN: PORTAL DE PACIENTES
@@ -1375,6 +1385,174 @@ def comprobante_extraccion(request, comprobante_id):
             'estudios': estudios,
         }
     )
+
+def descargar_comprobante_extraccion_pdf(request, comprobante_id):
+    """
+    Genera y descarga el comprobante de extracción en PDF.
+    No modifica la solicitud, la muestra ni la CAP.
+    """
+    if not request.user.is_authenticated:
+        return redirect('analisis_bioquimico:login_personal')
+
+    if not hasattr(request.user, 'extraccionista'):
+        messages.error(request, 'No tiene permisos para descargar este comprobante.')
+        return redirect('analisis_bioquimico:login_personal')
+
+    comprobante = get_object_or_404(
+        Comprobante.objects.select_related(
+            'solicitud__paciente',
+            'solicitud__receta__medico',
+            'muestra__extraccionista'
+        ),
+        id=comprobante_id
+    )
+
+    solicitud = comprobante.solicitud
+    muestra = comprobante.muestra
+    paciente = solicitud.paciente
+    medico = solicitud.receta.medico if solicitud.receta_id else None
+
+    estudios = SolicitudEstudio.objects.filter(
+        solicitud=solicitud
+    ).select_related('estudio').order_by('id')
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = (
+        f'attachment; filename="comprobante_extraccion_{solicitud.id}.pdf"'
+    )
+
+    documento = SimpleDocTemplate(
+        response,
+        pagesize=A4,
+        rightMargin=2 * cm,
+        leftMargin=2 * cm,
+        topMargin=2 * cm,
+        bottomMargin=2 * cm
+    )
+
+    estilos = getSampleStyleSheet()
+    estilos.add(ParagraphStyle(
+        name='TituloSAC',
+        parent=estilos['Heading1'],
+        alignment=TA_CENTER,
+        textColor=colors.HexColor('#174A7E'),
+        spaceAfter=8
+    ))
+    estilos.add(ParagraphStyle(
+        name='SubtituloSAC',
+        parent=estilos['Heading2'],
+        spaceBefore=14,
+        spaceAfter=8,
+        textColor=colors.HexColor('#174A7E')
+    ))
+    estilos.add(ParagraphStyle(
+        name='CAPSAC',
+        parent=estilos['Heading1'],
+        alignment=TA_CENTER,
+        fontSize=22,
+        leading=28,
+        textColor=colors.HexColor('#174A7E')
+    ))
+
+    elementos = []
+
+    def texto(valor):
+        return escape(str(valor if valor is not None else 'No disponible'))
+
+    def linea(etiqueta, valor):
+        return Paragraph(
+            f'<b>{escape(etiqueta)}:</b> {texto(valor)}',
+            estilos['Normal']
+        )
+
+    elementos.append(Paragraph('LABORATORIO SAC', estilos['TituloSAC']))
+    elementos.append(Paragraph(
+        'Comprobante de extracción',
+        estilos['Title']
+    ))
+    elementos.append(Spacer(1, 0.5 * cm))
+
+    elementos.append(linea('Número de solicitud', solicitud.id))
+    elementos.append(linea(
+        'Fecha de solicitud',
+        solicitud.fecha_hora.strftime('%d/%m/%Y %H:%M')
+    ))
+
+    elementos.append(Paragraph('Paciente', estilos['SubtituloSAC']))
+    elementos.append(linea('Número de paciente', comprobante.numero_paciente))
+    elementos.append(linea('DNI', paciente.dni))
+    elementos.append(linea(
+        'Nombre y apellido',
+        f'{paciente.nombre} {paciente.apellido}'
+    ))
+
+    elementos.append(Paragraph('Médico solicitante', estilos['SubtituloSAC']))
+
+    if medico:
+        elementos.append(linea(
+            'Nombre y apellido',
+            f'{medico.nombre} {medico.apellido}'
+        ))
+        elementos.append(linea('Matrícula profesional', medico.matricula))
+    else:
+        elementos.append(Paragraph('No disponible', estilos['Normal']))
+
+    elementos.append(Paragraph('Extracción', estilos['SubtituloSAC']))
+    elementos.append(linea(
+        'Extraccionista',
+        f'{muestra.extraccionista.nombre} {muestra.extraccionista.apellido}'
+    ))
+    elementos.append(linea('Tipo de muestra', muestra.tipo))
+    elementos.append(linea(
+        'Fecha de extracción',
+        muestra.fecha_hora_extraccion.strftime('%d/%m/%Y %H:%M')
+        if muestra.fecha_hora_extraccion else 'No disponible'
+    ))
+
+    elementos.append(Paragraph('Estudios solicitados', estilos['SubtituloSAC']))
+    elementos.append(linea('Cantidad de estudios', estudios.count()))
+    elementos.append(Spacer(1, 0.3 * cm))
+
+    datos_tabla = [
+        [
+            Paragraph('<b>Código</b>', estilos['Normal']),
+            Paragraph('<b>Estudio</b>', estilos['Normal'])
+        ]
+    ]
+
+    for solicitud_estudio in estudios:
+        datos_tabla.append([
+            Paragraph(texto(solicitud_estudio.estudio.codigo), estilos['Normal']),
+            Paragraph(texto(solicitud_estudio.estudio.nombre), estilos['Normal'])
+        ])
+
+    tabla = Table(datos_tabla, colWidths=[3.5 * cm, 12.5 * cm], repeatRows=1)
+    tabla.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#DCEAF5')),
+        ('GRID', (0, 0), (-1, -1), 0.4, colors.lightgrey),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 9),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 9),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+    ]))
+
+    elementos.append(tabla)
+    elementos.append(Spacer(1, 0.7 * cm))
+
+    elementos.append(KeepTogether([
+        Paragraph('CLAVE DE ACCESO PERSONAL (CAP)', estilos['TituloSAC']),
+        Paragraph(texto(comprobante.cap), estilos['CAPSAC']),
+        Spacer(1, 0.3 * cm),
+        Paragraph(
+            'Conserve esta clave para consultar sus resultados.',
+            estilos['Normal']
+        )
+    ]))
+
+    documento.build(elementos)
+
+    return response
 
 def panel_bioquimico(request):
     """

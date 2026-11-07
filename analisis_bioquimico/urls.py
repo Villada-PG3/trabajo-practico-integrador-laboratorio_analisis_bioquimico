@@ -94,6 +94,12 @@ urlpatterns = [
     ),
 
     path(
+        'personal/extraccion/comprobante/<int:comprobante_id>/pdf/',
+        views.descargar_comprobante_extraccion_pdf,
+        name='descargar_comprobante_extraccion_pdf'
+    ),
+
+    path(
         'personal/laboratorio/',
         views.panel_laboratorio,
         name='panel_laboratorio'
