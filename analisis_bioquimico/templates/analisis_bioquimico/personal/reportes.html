@@ -4,270 +4,172 @@
 Reportes Estadísticos - Laboratorio SAC
 {% endblock %}
 
+{% block extra_css %}
+<style>
+  .dashboard-container {
+    background-color: #0f172a;
+    color: #f8fafc;
+  }
+  .glass-card {
+    background: rgba(30, 41, 59, 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .glass-input {
+    background: rgba(15, 23, 42, 0.6) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    color: #f8fafc !important;
+  }
+  .glass-input:focus {
+    border-color: #38bdf8 !important;
+    box-shadow: 0 0 0 0.25rem rgba(56, 189, 248, 0.25) !important;
+  }
+  .glass-input option {
+    background-color: #0f172a;
+    color: #f8fafc;
+  }
+  .stat-pill {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+</style>
+{% endblock %}
 
 {% block content %}
+<div class="dashboard-container min-vh-100 py-4 py-lg-5">
+  <div class="container-fluid px-4 max-w-7xl">
 
-<div class="container mt-4">
-
-    <div class="d-flex justify-content-between align-items-center mb-4">
-
-        <div>
-
-            <h2 class="mb-1">
-                Reportes Estadísticos
-            </h2>
-
-            <p class="text-muted mb-0">
-                Volumen de solicitudes del laboratorio
-            </p>
-
+    <!-- ENCABEZADO -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 pb-3 border-bottom border-white border-opacity-10">
+      <div>
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <span class="badge bg-info bg-opacity-20 text-dark border border-info border-opacity-25 px-3 py-1 rounded-pill small">
+            <i class="bi bi-graph-up-arrow me-1"></i> Módulo de Métricas
+          </span>
         </div>
-
-        <a
-            href="{% url 'analisis_bioquimico:panel_laboratorio' %}"
-            class="btn btn-outline-secondary"
-        >
-            Volver
+        <h1 class="h3 fw-bold text-white mb-1">Reportes Estadísticos</h1>
+        <p class="text-white-50 mb-0 small">Volumen de solicitudes procesadas en el laboratorio</p>
+      </div>
+      <div class="mt-3 mt-md-0 d-flex align-items-center gap-2">
+        <a href="{% url 'analisis_bioquimico:panel_laboratorio' %}" class="btn btn-outline-light rounded-3 px-4 py-2 d-flex align-items-center gap-2">
+          <i class="bi bi-arrow-left"></i>
+          <span>Volver al Panel</span>
         </a>
-
+      </div>
     </div>
-
 
     <!-- FILTROS -->
+    <div class="glass-card rounded-4 p-4 mb-4">
+      <form method="GET">
+        <div class="row align-items-end g-3">
+          
+          <div class="col-md-4">
+            <label for="periodo" class="form-label text-white-50 small fw-semibold">AGRUPAR POR</label>
+            <div class="input-group">
+              <span class="input-group-text glass-input text-white-50 border-end-0">
+                <i class="bi bi-calendar3"></i>
+              </span>
+              <select name="periodo" id="periodo" class="form-select glass-input border-start-0">
+                <option value="dia" {% if periodo == 'dia' %}selected{% endif %}>Día</option>
+                <option value="semana" {% if periodo == 'semana' %}selected{% endif %}>Semana</option>
+                <option value="mes" {% if periodo == 'mes' %}selected{% endif %}>Mes</option>
+              </select>
+            </div>
+          </div>
 
-    <div class="card shadow-sm mb-4">
+          <div class="col-md-5">
+            <label for="estudio" class="form-label text-white-50 small fw-semibold">ESTUDIO BIOQUÍMICO</label>
+            <div class="input-group">
+              <span class="input-group-text glass-input text-white-50 border-end-0">
+                <i class="bi bi-journal-medical"></i>
+              </span>
+              <select name="estudio" id="estudio" class="form-select glass-input border-start-0">
+                <option value="">Todos los estudios</option>
+                {% for estudio in estudios %}
+                  <option value="{{ estudio.id }}" {% if estudio_seleccionado and estudio_seleccionado.id == estudio.id %}selected{% endif %}>
+                    {{ estudio.codigo }} - {{ estudio.nombre }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
 
-        <div class="card-body">
-
-            <form method="GET">
-
-                <div class="row align-items-end">
-
-                    <div class="col-md-4">
-
-                        <label
-                            for="periodo"
-                            class="form-label fw-bold"
-                        >
-                            Agrupar por
-                        </label>
-
-                        <select
-                            name="periodo"
-                            id="periodo"
-                            class="form-select"
-                        >
-
-                            <option
-                                value="dia"
-                                {% if periodo == 'dia' %}selected{% endif %}
-                            >
-                                Día
-                            </option>
-
-                            <option
-                                value="semana"
-                                {% if periodo == 'semana' %}selected{% endif %}
-                            >
-                                Semana
-                            </option>
-
-                            <option
-                                value="mes"
-                                {% if periodo == 'mes' %}selected{% endif %}
-                            >
-                                Mes
-                            </option>
-
-                        </select>
-
-                    </div>
-
-
-                    <div class="col-md-5">
-
-                        <label
-                            for="estudio"
-                            class="form-label fw-bold"
-                        >
-                            Estudio
-                        </label>
-
-                        <select
-                            name="estudio"
-                            id="estudio"
-                            class="form-select"
-                        >
-
-                            <option value="">
-                                Todos los estudios
-                            </option>
-
-                            {% for estudio in estudios %}
-
-                                <option
-                                    value="{{ estudio.id }}"
-                                    {% if estudio_seleccionado and estudio_seleccionado.id == estudio.id %}selected{% endif %}
-                                >
-
-                                    {{ estudio.codigo }}
-                                    -
-                                    {{ estudio.nombre }}
-
-                                </option>
-
-                            {% endfor %}
-
-                        </select>
-
-                    </div>
-
-
-                    <div class="col-md-3 mt-3 mt-md-0">
-
-                        <button
-                            type="submit"
-                            class="btn btn-primary w-100"
-                        >
-                            Aplicar filtros
-                        </button>
-
-                    </div>
-
-                </div>
-
-            </form>
+          <div class="col-md-3">
+            <button type="submit" class="btn btn-info w-100 py-2.5 rounded-3 fw-bold text-dark d-flex align-items-center justify-content-center gap-2 shadow-sm">
+              <i class="bi bi-funnel-fill"></i>
+              <span>Aplicar filtros</span>
+            </button>
+          </div>
 
         </div>
-
+      </form>
     </div>
 
-
-    <!-- RESUMEN -->
-
-    <div class="card shadow-sm mb-4">
-
-        <div class="card-body">
-
-            <h5 class="card-title">
-                Solicitudes incluidas
-            </h5>
-
-            <h2 class="fw-bold mb-0">
-                {{ total_solicitudes }}
-            </h2>
-
-            {% if estudio_seleccionado %}
-
-                <p class="text-muted mt-2 mb-0">
-
-                    Filtrado por:
-
-                    <strong>
-                        {{ estudio_seleccionado.codigo }}
-                        -
-                        {{ estudio_seleccionado.nombre }}
-                    </strong>
-
-                </p>
-
-            {% else %}
-
-                <p class="text-muted mt-2 mb-0">
-                    Todos los estudios
-                </p>
-
-            {% endif %}
-
-        </div>
-
+    <!-- RESUMEN KPI -->
+    <div class="glass-card rounded-4 p-4 mb-4 position-relative overflow-hidden">
+      <div class="position-absolute top-0 end-0 p-4 opacity-10">
+        <i class="bi bi-file-earmark-check display-2 text-info"></i>
+      </div>
+      <div class="position-relative z-1">
+        <span class="small text-white-50 fw-semibold text-uppercase tracking-wider">Solicitudes Incluidas</span>
+        <h2 class="display-4 fw-bold text-info my-1">{{ total_solicitudes }}</h2>
+        {% if estudio_seleccionado %}
+          <p class="text-white-50 mb-0 small">
+            Filtrado por: <strong class="text-white">{{ estudio_seleccionado.codigo }} - {{ estudio_seleccionado.nombre }}</strong>
+          </p>
+        {% else %}
+          <p class="text-white-50 mb-0 small">Todos los estudios</p>
+        {% endif %}
+      </div>
     </div>
 
-
-    <!-- GRÁFICO POR PERÍODO -->
-
-    <div class="card shadow-sm mb-4">
-
-        <div class="card-header">
-
-            <strong>
-                Solicitudes por
-
-                {% if periodo == 'dia' %}
-                    día
-                {% elif periodo == 'semana' %}
-                    semana
-                {% else %}
-                    mes
-                {% endif %}
-
-            </strong>
-
-        </div>
-
-
-        <div class="card-body">
-
-            {% if valores_periodo %}
-
-                <canvas
-                    id="graficoPeriodo"
-                    height="100"
-                ></canvas>
-
-            {% else %}
-
-                <div class="alert alert-info mb-0">
-
-                    No hay solicitudes para los filtros seleccionados.
-
-                </div>
-
-            {% endif %}
-
-        </div>
-
+<!-- GRÁFICO POR PERÍODO -->
+    <div class="glass-card rounded-4 p-4 mb-4">
+      <div class="d-flex align-items-center justify-content-between mb-3 pb-3 border-bottom border-white border-opacity-10">
+        <h3 class="h6 fw-bold text-white mb-0 text-uppercase tracking-wider d-flex align-items-center gap-2">
+          <i class="bi bi-activity text-info"></i>
+          <span>
+            Solicitudes por 
+            {% if periodo == 'dia' %}día{% elif periodo == 'semana' %}semana{% else %}mes{% endif %}
+          </span>
+        </h3>
+      </div>
+      <!-- FONDO CORREGIDO (Dark Glass en vez de bg-white) -->
+      <div class="p-3 rounded-3" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.05);">
+        {% if valores_periodo %}
+          <canvas id="graficoPeriodo" height="90"></canvas>
+        {% else %}
+          <div class="alert bg-white bg-opacity-10 text-white border-0 mb-0 d-flex align-items-center gap-2">
+            <i class="bi bi-info-circle text-info"></i>
+            <span>No hay solicitudes para los filtros seleccionados.</span>
+          </div>
+        {% endif %}
+      </div>
     </div>
-
 
     <!-- GRÁFICO POR ESTUDIO -->
-
-    <div class="card shadow-sm mb-4">
-
-        <div class="card-header">
-
-            <strong>
-                Solicitudes por estudio
-            </strong>
-
-        </div>
-
-
-        <div class="card-body">
-
-            {% if valores_estudios %}
-
-                <canvas
-                    id="graficoEstudios"
-                    height="120"
-                ></canvas>
-
-            {% else %}
-
-                <div class="alert alert-info mb-0">
-
-                    No hay datos de estudios disponibles.
-
-                </div>
-
-            {% endif %}
-
-        </div>
-
+    <div class="glass-card rounded-4 p-4 mb-4">
+      <div class="d-flex align-items-center justify-content-between mb-3 pb-3 border-bottom border-white border-opacity-10">
+        <h3 class="h6 fw-bold text-white mb-0 text-uppercase tracking-wider d-flex align-items-center gap-2">
+          <i class="bi bi-bar-chart-steps text-warning"></i>
+          <span>Solicitudes por estudio</span>
+        </h3>
+      </div>
+      <!-- FONDO CORREGIDO (Dark Glass en vez de bg-white) -->
+      <div class="p-3 rounded-3" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.05);">
+        {% if valores_estudios %}
+          <canvas id="graficoEstudios" height="110"></canvas>
+        {% else %}
+          <div class="alert bg-white bg-opacity-10 text-white border-0 mb-0 d-flex align-items-center gap-2">
+            <i class="bi bi-info-circle text-warning"></i>
+            <span>No hay datos de estudios disponibles.</span>
+          </div>
+        {% endif %}
+      </div>
     </div>
 
+  </div>
 </div>
-
 
 {{ labels_periodo|json_script:"labels-periodo" }}
 {{ valores_periodo|json_script:"valores-periodo" }}
@@ -275,135 +177,82 @@ Reportes Estadísticos - Laboratorio SAC
 {{ labels_estudios|json_script:"labels-estudios" }}
 {{ valores_estudios|json_script:"valores-estudios" }}
 
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
+  // Estilos globales de Chart.js para modo oscuro
+  Chart.defaults.color = '#94a3b8';
+  Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.08)';
 
-    const labelsPeriodo = JSON.parse(
-        document.getElementById(
-            'labels-periodo'
-        ).textContent
-    );
+  const labelsPeriodo = JSON.parse(document.getElementById('labels-periodo').textContent);
+  const valoresPeriodo = JSON.parse(document.getElementById('valores-periodo').textContent);
 
-    const valoresPeriodo = JSON.parse(
-        document.getElementById(
-            'valores-periodo'
-        ).textContent
-    );
+  const labelsEstudios = JSON.parse(document.getElementById('labels-estudios').textContent);
+  const valoresEstudios = JSON.parse(document.getElementById('valores-estudios').textContent);
 
+  const canvasPeriodo = document.getElementById('graficoPeriodo');
+  if (canvasPeriodo) {
+    new Chart(canvasPeriodo, {
+      type: 'line',
+      data: {
+        labels: labelsPeriodo,
+        datasets: [{
+          label: 'Cantidad de solicitudes',
+          data: valoresPeriodo,
+          borderColor: '#38bdf8',
+          backgroundColor: 'rgba(56, 189, 248, 0.15)',
+          fill: true,
+          borderWidth: 3,
+          tension: 0.3,
+          pointBackgroundColor: '#38bdf8',
+          pointRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { labels: { color: '#f8fafc' } }
+        },
+        scales: {
+          x: { grid: { display: false } },
+          y: {
+            beginAtZero: true,
+            ticks: { precision: 0 }
+          }
+        }
+      }
+    });
+  }
 
-    const labelsEstudios = JSON.parse(
-        document.getElementById(
-            'labels-estudios'
-        ).textContent
-    );
-
-    const valoresEstudios = JSON.parse(
-        document.getElementById(
-            'valores-estudios'
-        ).textContent
-    );
-
-
-    const canvasPeriodo =
-        document.getElementById(
-            'graficoPeriodo'
-        );
-
-    if (canvasPeriodo) {
-
-        new Chart(
-            canvasPeriodo,
-            {
-                type: 'line',
-
-                data: {
-
-                    labels: labelsPeriodo,
-
-                    datasets: [
-                        {
-                            label: 'Cantidad de solicitudes',
-                            data: valoresPeriodo,
-                            borderWidth: 2,
-                            tension: 0.2
-                        }
-                    ]
-
-                },
-
-                options: {
-
-                    responsive: true,
-
-                    scales: {
-
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                precision: 0
-                            }
-                        }
-
-                    }
-
-                }
-
-            }
-        );
-
-    }
-
-
-    const canvasEstudios =
-        document.getElementById(
-            'graficoEstudios'
-        );
-
-    if (canvasEstudios) {
-
-        new Chart(
-            canvasEstudios,
-            {
-                type: 'bar',
-
-                data: {
-
-                    labels: labelsEstudios,
-
-                    datasets: [
-                        {
-                            label: 'Solicitudes',
-                            data: valoresEstudios,
-                            borderWidth: 1
-                        }
-                    ]
-
-                },
-
-                options: {
-
-                    responsive: true,
-
-                    scales: {
-
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                precision: 0
-                            }
-                        }
-
-                    }
-
-                }
-
-            }
-        );
-
-    }
-
+  const canvasEstudios = document.getElementById('graficoEstudios');
+  if (canvasEstudios) {
+    new Chart(canvasEstudios, {
+      type: 'bar',
+      data: {
+        labels: labelsEstudios,
+        datasets: [{
+          label: 'Solicitudes',
+          data: valoresEstudios,
+          backgroundColor: 'rgba(129, 140, 248, 0.75)',
+          borderColor: '#818cf8',
+          borderWidth: 1,
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { labels: { color: '#f8fafc' } }
+        },
+        scales: {
+          x: { grid: { display: false } },
+          y: {
+            beginAtZero: true,
+            ticks: { precision: 0 }
+          }
+        }
+      }
+    });
+  }
 </script>
-
 {% endblock %}
