@@ -45,13 +45,22 @@
           <div class="position-relative z-2 pt-4">
             <div class="d-flex flex-wrap gap-3 align-items-center mb-4">
               
-              <!-- Acceso directo al Portal -->
-              <a href="{% url 'analisis_bioquimico:login' %}" class="btn btn-info btn-lg px-4 py-3 rounded-4 fw-bold text-dark shadow-sm d-inline-flex align-items-center gap-2">
-                Consultar Resultados
-                <svg width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
-                  <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
-                </svg>
-              </a>
+              <!-- Acceso dinámico al Portal según sesión activa -->
+              {% if user.is_authenticated %}
+                <a href="{% url 'analisis_bioquimico:portal_historial' %}" class="btn btn-info btn-lg px-4 py-3 rounded-4 fw-bold text-dark shadow-sm d-inline-flex align-items-center gap-2">
+                  Ir a Mis Estudios
+                  <svg width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
+                  </svg>
+                </a>
+              {% else %}
+                <a href="{% url 'analisis_bioquimico:login' %}" class="btn btn-info btn-lg px-4 py-3 rounded-4 fw-bold text-dark shadow-sm d-inline-flex align-items-center gap-2">
+                  Consultar Resultados
+                  <svg width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
+                  </svg>
+                </a>
+              {% endif %}
 
               <!-- Acceso a la Sala de Espera -->
               <a href="{% url 'analisis_bioquimico:sala_espera' %}" class="btn btn-outline-light btn-lg px-4 py-3 rounded-4 fw-semibold border-2 d-inline-flex align-items-center gap-2">
@@ -92,17 +101,30 @@
 
             <h2 class="fw-bold mb-3 fs-3">Portal de Resultados</h2>
             <p class="text-white-50 mb-4 fs-6 lh-base">
-              Accedé a tus informes desde cualquier lugar. Ingresá con tu <strong class="text-white">DNI</strong> y el código <strong class="text-white">CAP</strong> otorgado durante tu toma de muestra.
+              {% if user.is_authenticated %}
+                Ya tenés la sesión iniciada. Accedé directamente a la lista de tus análisis e informes médicos.
+              {% else %}
+                Accedé a tus informes desde cualquier lugar. Ingresá con tu <strong class="text-white">DNI</strong> y el código <strong class="text-white">CAP</strong> otorgado durante tu toma de muestra.
+              {% endif %}
             </p>
           </div>
 
           <div>
-            <a href="{% url 'analisis_bioquimico:login' %}" class="btn btn-light btn-lg w-100 fw-bold text-primary shadow-lg py-3 rounded-4 d-flex align-items-center justify-content-center gap-2">
-              <span>Ingresar al Portal</span>
-              <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
-              </svg>
-            </a>
+            {% if user.is_authenticated %}
+              <a href="{% url 'analisis_bioquimico:portal_historial' %}" class="btn btn-light btn-lg w-100 fw-bold text-primary shadow-lg py-3 rounded-4 d-flex align-items-center justify-content-center gap-2">
+                <span>Ver Mis Estudios</span>
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                  <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
+                </svg>
+              </a>
+            {% else %}
+              <a href="{% url 'analisis_bioquimico:login' %}" class="btn btn-light btn-lg w-100 fw-bold text-primary shadow-lg py-3 rounded-4 d-flex align-items-center justify-content-center gap-2">
+                <span>Ingresar al Portal</span>
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                  <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
+                </svg>
+              </a>
+            {% endif %}
           </div>
 
         </div>
