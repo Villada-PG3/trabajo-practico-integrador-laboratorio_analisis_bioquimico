@@ -1,194 +1,151 @@
-
 {% extends 'analisis_bioquimico/base.html' %}
 
-{% block content %}
+{% block title %}Gestión de Pacientes - Laboratorio SAC{% endblock %}
 
+{% block content %}
 <div class="container py-4">
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold text-primary m-0">
-            <i class="bi bi-person-vcard me-2"></i>
-            Gestión de Pacientes
-        </h2>
-
-        <a href="{% url 'analisis_bioquimico:panel_recepcion' %}"
-           class="btn btn-outline-secondary">
-            Volver
-        </a>
+  <!-- Encabezado y Acciones -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="h3 fw-bold text-primary mb-0 d-flex align-items-center gap-2">
+      <i class="bi bi-person-vcard"></i> Gestión de Pacientes
+    </h2>
+    <div class="d-flex gap-2">
+      <button type="button" class="btn btn-success fw-bold d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#modalNuevoPaciente">
+        <i class="bi bi-person-plus-fill"></i> + Nuevo Paciente
+      </button>
+      <a href="{% url 'analisis_bioquimico:panel_recepcion' %}" class="btn btn-outline-secondary">Volver</a>
     </div>
+  </div>
 
-    <!-- BÚSQUEDA -->
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body p-4">
-
-            <h5 class="fw-bold mb-3">
-                Buscar Paciente por DNI
-            </h5>
-
-            <form method="GET" class="row g-2">
-
-                <div class="col-md-9">
-                    <input
-                        type="text"
-                        name="dni"
-                        class="form-control form-control-lg"
-                        placeholder="Ingrese el DNI sin puntos"
-                        value="{{ dni_busqueda }}"
-                        maxlength="15"
-                        required
-                    >
-                </div>
-
-                <div class="col-md-3">
-                    <button type="submit"
-                            class="btn btn-primary btn-lg w-100">
-                        <i class="bi bi-search me-1"></i>
-                        Buscar
-                    </button>
-                </div>
-
-            </form>
+  <!-- Buscador -->
+  <div class="card shadow-sm border-0 mb-4 rounded-3">
+    <div class="card-body p-4">
+      <form method="GET" action="" class="row g-3 align-items-end">
+        <div class="col-md-9">
+          <label for="inputDni" class="form-label fw-bold">Buscar Paciente (DNI, Nombre o Apellido)</label>
+          <input 
+            type="text" 
+            name="dni" 
+            id="inputDni" 
+            class="form-control form-control-lg" 
+            placeholder="Ingrese DNI o nombre para filtrar..." 
+            value="{{ query }}"
+          >
         </div>
+        <div class="col-md-3 d-flex gap-2">
+          <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold">
+            <i class="bi bi-search"></i> Buscar
+          </button>
+          {% if query %}
+            <a href="{% url 'analisis_bioquimico:gestion_pacientes' %}" class="btn btn-outline-secondary btn-lg" title="Limpiar filtro">
+              <i class="bi bi-x-lg"></i>
+            </a>
+          {% endif %}
+        </div>
+      </form>
     </div>
+  </div>
 
-    <!-- ALTA / EDICIÓN -->
-    {% if dni_busqueda and form %}
-
-    <div class="card border-0 shadow-sm">
-
-        <div class="card-header bg-white py-3">
-
-            {% if paciente %}
-                <h5 class="mb-0 text-warning">
-                    <i class="bi bi-pencil-square me-1"></i>
-                    Editar Datos de Contacto
-                </h5>
-                <small class="text-muted">
-                    Paciente encontrado. Los datos de identidad
-                    no se pueden modificar desde esta pantalla.
-                </small>
-            {% else %}
-                <h5 class="mb-0 text-success">
-                    <i class="bi bi-person-plus-fill me-1"></i>
-                    Registrar Nuevo Paciente
-                </h5>
-            {% endif %}
-
-        </div>
-
-        <div class="card-body p-4">
-
-            <form method="POST">
-                {% csrf_token %}
-                <input
-                    type="hidden"
-                    name="dni_busqueda"
-                    value="{{ dni_busqueda }}"
-                >
-                {% if form.non_field_errors %}
-                    <div class="alert alert-danger">
-                        {{ form.non_field_errors }}
-                    </div>
-                {% endif %}
-
-                <div class="row g-3">
-
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">
-                            DNI
-                        </label>
-                        {{ form.dni }}
-                        <div class="text-danger small">
-                            {{ form.dni.errors }}
-                        </div>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">
-                            Nombre
-                        </label>
-                        {{ form.nombre }}
-                        <div class="text-danger small">
-                            {{ form.nombre.errors }}
-                        </div>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">
-                            Apellido
-                        </label>
-                        {{ form.apellido }}
-                        <div class="text-danger small">
-                            {{ form.apellido.errors }}
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold">
-                            Correo Electrónico
-                        </label>
-                        {{ form.email }}
-                        <div class="text-danger small">
-                            {{ form.email.errors }}
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold">
-                            Teléfono
-                        </label>
-                        {{ form.telefono }}
-                        <div class="text-danger small">
-                            {{ form.telefono.errors }}
-                        </div>
-                    </div>
-
-                    <div class="col-12">
-                        <label class="form-label fw-bold">
-                            Domicilio
-                        </label>
-                        {{ form.domicilio }}
-                        <div class="text-danger small">
-                            {{ form.domicilio.errors }}
-                        </div>
-                    </div>
-
-                </div>
-
-                <div class="mt-4 d-flex justify-content-between">
-
-                    {% if paciente %}
-                        <a
-                            href="{% url 'analisis_bioquimico:recepcion_crear_solicitud' %}?paciente_id={{ paciente.id }}"
-                            class="btn btn-outline-primary"
-                        >
-                            Crear Solicitud para este Paciente
-                        </a>
-                    {% else %}
-                        <span></span>
-                    {% endif %}
-
-                    <button type="submit"
-                            class="btn {% if paciente %}btn-warning{% else %}btn-success{% endif %}">
-
-                        {% if paciente %}
-                            Guardar Cambios
-                        {% else %}
-                            Registrar Paciente
-                        {% endif %}
-
-                    </button>
-
-                </div>
-
-            </form>
-
-        </div>
-
+  <!-- Listado de Pacientes -->
+  <div class="card shadow-sm border-0 rounded-3">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+      <h5 class="mb-0 fw-bold text-secondary">
+        <i class="bi bi-people-fill me-2"></i> Pacientes Registrados 
+        <span class="badge bg-primary rounded-pill">{{ pacientes|length }}</span>
+      </h5>
     </div>
-
-    {% endif %}
+    <div class="card-body p-0">
+      {% if pacientes %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th class="ps-4">DNI</th>
+                <th>Paciente</th>
+                <th>Teléfono</th>
+                <th>Email</th>
+                <th>Domicilio</th>
+                <th class="text-end pe-4">Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in pacientes %}
+                <tr>
+                  <td class="ps-4 fw-bold text-primary">{{ p.dni }}</td>
+                  <td class="fw-bold">{{ p.apellido|upper }}, {{ p.nombre }}</td>
+                  <td>{{ p.telefono|default:"-" }}</td>
+                  <td>{{ p.email|default:"-" }}</td>
+                  <td>{{ p.domicilio|default:"-" }}</td>
+                  <td class="text-end pe-4">
+                    <a href="{% url 'analisis_bioquimico:recepcion_crear_solicitud' %}?paciente_id={{ p.id }}" class="btn btn-sm btn-primary fw-bold">
+                      <i class="bi bi-file-earmark-plus"></i> Nueva Solicitud
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="p-5 text-center">
+          <i class="bi bi-person-x text-warning display-4 mb-3 d-block"></i>
+          <h5 class="fw-bold">No se encontraron pacientes con "{{ query }}"</h5>
+          <p class="text-muted">¿Deseás crearlo como un paciente nuevo?</p>
+          <button type="button" class="btn btn-success fw-bold" data-bs-toggle="modal" data-bs-target="#modalNuevoPaciente">
+            + Registrar Paciente {{ query }}
+          </button>
+        </div>
+      {% endif %}
+    </div>
+  </div>
 
 </div>
 
+<!-- Modal Crear Paciente -->
+<div class="modal fade" id="modalNuevoPaciente" tabindex="-1" aria-labelledby="modalNuevoPacienteLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title fw-bold" id="modalNuevoPacienteLabel">Registrar Nuevo Paciente</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="POST" action="">
+        {% csrf_token %}
+        <div class="modal-body p-4">
+          <div class="mb-3">
+            <label class="form-label fw-bold">DNI</label>
+            {{ form.dni }}
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="form-label fw-bold">Nombre</label>
+              {{ form.nombre }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold">Apellido</label>
+              {{ form.apellido }}
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">Email</label>
+            {{ form.email }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">Teléfono</label>
+            {{ form.telefono }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">Domicilio</label>
+            {{ form.domicilio }}
+          </div>
+        </div>
+        <div class="modal-footer bg-light">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-success fw-bold">Guardar Paciente</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 {% endblock %}

@@ -709,90 +709,32 @@ def reportes_laboratorio(request):
 # SECCIÓN: MÓDULO 1 - RECEPCIÓN DE RECETA
 # ==========================================
 def gestion_pacientes(request):
-    """
-    Gestión de pacientes desde Recepción.
-
-    - Buscar por DNI.
-    - Registrar si no existe.
-    - Actualizar datos de contacto si existe.
-    """
-
-    if not request.user.is_authenticated:
-        return redirect('analisis_bioquimico:login')
-
-    if not hasattr(request.user, 'recepcionista'):
-        messages.error(
-            request,
-            'No tiene permisos para gestionar pacientes.'
+    query = request.GET.get('dni', '').strip()
+    
+    # Si hay búsqueda, filtramos por DNI, Nombre o Apellido; si no, traemos todos
+    if query:
+        pacientes = Paciente.objects.filter(
+            Q(dni__icontains=query) | 
+            Q(nombre__icontains=query) | 
+            Q(apellido__icontains=query)
         )
-        return redirect('analisis_bioquimico:login')
-
-    dni_busqueda = ''
-
-    paciente = None
-    form = None
+    else:
+        pacientes = Paciente.objects.all().order_by('-id')
 
     if request.method == 'POST':
-
-        dni_busqueda = request.POST.get(
-            'dni_busqueda', ''
-        ).strip()
-
-        paciente = Paciente.objects.filter(
-            dni=dni_busqueda
-        ).first()
-
-        form = PacienteForm(
-            request.POST,
-            instance=paciente
-        )
-
+        form = PacienteForm(request.POST)
         if form.is_valid():
-
-            paciente_guardado = form.save()
-
-            if paciente:
-                messages.success(
-                    request,
-                    'Los datos de contacto del paciente '
-                    'se actualizaron correctamente.'
-                )
-            else:
-                messages.success(
-                    request,
-                    'El paciente fue registrado correctamente.'
-                )
-
-            return redirect(
-                'analisis_bioquimico:gestion_pacientes'
-            )
-
+            paciente = form.save()
+            messages.success(request, f'Paciente {paciente.nombre} {paciente.apellido} registrado correctamente.')
+            return redirect(f"{request.path}?dni={paciente.dni}")
     else:
+        form = PacienteForm(initial={'dni': query} if query.isdigit() else None)
 
-        dni_busqueda = request.GET.get(
-            'dni', ''
-        ).strip()
-
-        if dni_busqueda:
-
-            paciente = Paciente.objects.filter(
-                dni=dni_busqueda
-            ).first()
-
-            form = PacienteForm(
-                instance=paciente,
-                initial={'dni': dni_busqueda}
-            )
-
-    return render(
-        request,
-        'analisis_bioquimico/recepcion/gestion_paciente.html',
-        {
-            'dni_busqueda': dni_busqueda,
-            'paciente': paciente,
-            'form': form,
-        }
-    )
+    return render(request, 'analisis_bioquimico/recepcion/gestion_paciente.html', {
+        'form': form,
+        'pacientes': pacientes,
+        'query': query
+    })
 def recepcion_crear_solicitud(request):
     """
     Formulario para recepción de receta y creación
