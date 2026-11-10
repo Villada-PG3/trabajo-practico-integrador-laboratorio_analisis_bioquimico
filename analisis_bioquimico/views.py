@@ -11,6 +11,7 @@ from decimal import Decimal, InvalidOperation
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.cache import never_cache
 from .permisos import solo_responsable
+from django.utils import timezone
 from .models import (
     Paciente,
     Medico,
@@ -1864,19 +1865,11 @@ def gestion_medicos(request):
 
 @require_POST
 def llamar_paciente(request, solicitud_id):
-    """
-    El extraccionista llama a un paciente
-    pendiente de extracción.
-    """
-
     if not request.user.is_authenticated:
         return redirect('analisis_bioquimico:login')
 
     if not hasattr(request.user, 'extraccionista'):
-        messages.error(
-            request,
-            'No tiene permisos para llamar pacientes.'
-        )
+        messages.error(request, 'No tiene permisos para llamar pacientes.')
         return redirect('analisis_bioquimico:login')
 
     solicitud = get_object_or_404(
@@ -1885,18 +1878,18 @@ def llamar_paciente(request, solicitud_id):
         estado__nombre__iexact='Pendiente de muestra'
     )
 
-    LlamadoExtraccion.objects.update_or_create(
+    # 1. Crear o actualizar el llamado
+    llamado, created = LlamadoExtraccion.objects.update_or_create(
         solicitud=solicitud,
         defaults={
-            'extraccionista': request.user.extraccionista
+            'extraccionista': request.user.extraccionista,
+            'fecha_hora': timezone.now() # Asegura actualizar la hora en llamados repetidos
         }
     )
 
-    messages.success(
-        request,
-        f'Paciente de solicitud #{solicitud.id} llamado a extracción.'
-    )
 
+
+    messages.success(request, f'Paciente de solicitud #{solicitud.id} llamado a extracción.')
     return redirect('analisis_bioquimico:panel_extraccion')
 
 
