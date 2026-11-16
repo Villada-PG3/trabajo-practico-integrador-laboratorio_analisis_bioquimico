@@ -5,15 +5,6 @@
     <h2>Recepción de Receta y Carga de Solicitud</h2>
     <hr>
 
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        {% endfor %}
-    {% endif %}
-
     <div class="card shadow-sm">
         <div class="card-body">
             <!-- IMPORTANTE: enctype="multipart/form-data" es obligatorio para subir la foto/PDF -->

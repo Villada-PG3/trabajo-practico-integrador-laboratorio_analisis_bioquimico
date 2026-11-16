@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.core.mail import send_mail
 from django.db import transaction
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.db.models.functions import TruncDay, TruncWeek, TruncMonth
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
 from decimal import Decimal, InvalidOperation
@@ -1852,7 +1852,7 @@ def gestion_medicos(request):
             )
 
         return redirect(
-            'analisis_bioquimico:recepcion_crear_solicitud'
+            'analisis_bioquimico:gestion_medicos'
         )
 
     return render(

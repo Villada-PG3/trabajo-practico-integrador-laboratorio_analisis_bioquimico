@@ -45,20 +45,6 @@
 <div class="dashboard-container min-vh-100 py-4 py-lg-5">
   <div class="container-fluid px-4 max-w-7xl">
     
-    <!-- MESSAGES DE DJANGO -->
-    {% if messages %}
-      <div class="mb-4">
-        {% for message in messages %}
-          <div class="alert alert-{{ message.tags|default:'info' }} bg-opacity-20 border border-{{ message.tags|default:'info' }} border-opacity-25 rounded-3 d-flex align-items-center justify-content-between p-3 text-white mb-2 shadow-sm" role="alert">
-            <div class="d-flex align-items-center gap-2">
-              <i class="bi bi-check-circle-fill text-success fs-5"></i>
-              <span>{{ message }}</span>
-            </div>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>
-        {% endfor %}
-      </div>
-    {% endif %}
 
     <!-- Encabezado del Módulo de Extracción -->
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 pb-3 border-bottom border-white border-opacity-10">
@@ -95,7 +81,7 @@
           <span>Solicitudes pendientes de muestra</span>
         </h3>
         {% if solicitudes %}
-          <span class="badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-25 px-3 py-1 rounded-pill small">
+          <span class="badge bg-warning text-dark border border-warning px-3 py-1 rounded-pill small">
             {{ solicitudes|length }} paciente{% if solicitudes|length > 1 %}s{% endif %} en cola
           </span>
         {% endif %}
@@ -160,7 +146,7 @@
 
                   <!-- Estado -->
                   <td class="py-3 px-4">
-                    <span class="badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-30 px-2.5 py-1.5 rounded-pill small">
+                    <span class="badge bg-warning text-dark border border-warning px-2.5 py-1.5 rounded-pill small">
                       <i class="bi bi-hourglass-split me-1"></i>Pendiente de muestra
                     </span>
                   </td>
